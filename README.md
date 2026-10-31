@@ -152,6 +152,11 @@ flowchart LR
 | `packaging/windows/` | WinUSB bind package (Zadig, no `.sys` to build) |
 | `docs/zadig.md` | Driver notes |
 | `docs/bands.md` | Preset notes |
+| `docs/roadmap.md` | Linux desktop, then Raspberry Pi |
+
+## Later
+
+Windows is the v1 machine. A Linux desktop package (udev, no WinUSB) comes before a Raspberry Pi 4/5 build. See [docs/roadmap.md](docs/roadmap.md).
 
 ## Disclaimer
 
