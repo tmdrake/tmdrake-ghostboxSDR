@@ -14,9 +14,13 @@ if /I "%~1"=="--setup-driver" goto console
 if not exist "%EXE%" call :build
 if not exist "%EXE%" goto fail
 
+rem Drop the trailing slash so start does not treat \" as an escaped quote.
+set "ROOT=%~dp0"
+if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
+
 echo Opening SHACKHACK window...
 rem First quoted arg is the console title, not the program.
-start "SHACKHACK" /D "%~dp0" "%EXE%" %*
+start "SHACKHACK" /D "%ROOT%" "%EXE%" %*
 if errorlevel 1 goto fail
 exit /b 0
 

@@ -85,9 +85,10 @@ See [packaging/windows/README.md](packaging/windows/README.md) and [docs/zadig.m
 
 Needs Rust (`rustup`) and, on Windows, the MSVC build tools (for `eframe` / `wgpu`).
 
-On Windows, double-click `run.cmd` (or `run.bat`, which calls it). That starts the window directly. Flags still pass through:
+On Windows, double-click **`ShackHack.vbs`**. That starts the window directly. `run.cmd` is the same launcher from a prompt. If Command Prompt is set up to open PowerShell first (`AutoRun`), a plain double-click of `run.cmd` never reaches the script.
 
 ```bat
+ShackHack.vbs
 run.cmd
 run.cmd --synth
 run.cmd --setup-driver
@@ -142,7 +143,8 @@ flowchart LR
 
 | Path | What |
 |---|---|
-| `run.cmd` | Windows launcher (opens the release window; `run.bat` calls it) |
+| `ShackHack.vbs` | Double-click launcher (skips cmd AutoRun) |
+| `run.cmd` | Windows launcher from a prompt (`run.bat` calls it) |
 | `crates/shackhack` | SLS HUD, NV waterfall, gain slider, audio out |
 | `crates/shackhack/assets/` | Window icon (phosphor stick figure) |
 | `crates/shackhack-sdr` | RTL open/hop/gain, synth IQ, radio thread |
