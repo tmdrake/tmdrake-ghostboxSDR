@@ -10,9 +10,6 @@ Built for a **cheap USB RTL-SDR** (RTL2832U + R820T/R820T2). No upconverter, no 
 [![license](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 <p align="center">
-  <img src="docs/diagrams/icon.png" alt="Drake's Box SDR stick-figure icon" width="128">
-</p>
-<p align="center">
   <img src="docs/diagrams/cheap-rtl-sdr.jpg" alt="Cheap generic USB RTL-SDR dongle with a whip antenna" width="880">
 </p>
 <p align="center"><sub>The whole radio: a few-dollar DVB-T stick, a whip, and this app.</sub></p>
@@ -25,7 +22,7 @@ Default shack-hack: FM broadcast **88–108 MHz**, **WFM**, **150 kHz** steps, *
 
 ## Look
 
-Night-vision phosphor HUD for a shack-hack ghost box: dark viewfinder, glowing stick-figure **contacts** on the sweep field, NV waterfall, blinking **SWEEP LIVE**, and an 8-cell **SIG** bar driven by audio RMS.
+Dark phosphor screen: spectrum analyzer, eight scanning VFOs, waterfall, a **SCANNING** badge, and an 8-cell **SIG** bar driven by audio RMS.
 
 ## Diagram — cheap RTL-SDR to speakers
 
@@ -109,14 +106,14 @@ cargo run --release -p shackhack -- --synth
 
 ## Controls
 
-- **HOLD / SWEEP** — freeze the box vs keep racing
+- **Start scan / Stop scan** — the sweep starts on its own. **Stop scan** means it is already moving.
 - **Band** — FM, airband, VHF, NOAA, GMRS, 70 cm, …
 - **Mode** — bounce, forward, backward, random
 - **Dwell / Step** — shack-hack speed
 - **Gain** — RF gain in dB
 - **SIG** — audio-RMS LED bar (green → amber → red)
 - Click the spectrum while sweeping to **park VFO 2**
-- HOLD the sweep, then click to tune **VFO 1**
+- Stop the scan, then click the spectrum to tune **VFO 1**
 
 ## Analog voice presets (US)
 
@@ -146,8 +143,7 @@ flowchart LR
 |---|---|
 | `Start.vbs` | Double-click this to open the radio |
 | `run.cmd` | Windows launcher from a prompt (`run.bat` calls it) |
-| `crates/shackhack` | Ghost-box HUD, NV waterfall, gain slider, audio out |
-| `crates/shackhack/assets/` | Window icon (phosphor stick figure) |
+| `crates/shackhack` | Dark HUD, spectrum, gain slider, audio out |
 | `crates/shackhack-sdr` | RTL open/hop/gain, synth IQ, radio thread |
 | `crates/shackhack-dsp` | FFT, sweeper, AM/NFM/WFM VFOs |
 | `crates/shackhack-bands` | Band table and tuner floors |

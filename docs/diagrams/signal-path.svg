@@ -21,15 +21,7 @@
   <path d="M 12 592 L 12 608 L 28 608" fill="none" stroke="#00ff6a" stroke-width="2"/>
   <path d="M 1108 592 L 1108 608 L 1092 608" fill="none" stroke="#00ff6a" stroke-width="2"/>
 
-  <g transform="translate(36,18)" stroke="#00ff6a" fill="none" stroke-width="1.4">
-    <circle cx="10" cy="6" r="4"/>
-    <line x1="10" y1="10" x2="10" y2="22"/>
-    <line x1="10" y1="14" x2="2" y2="16"/>
-    <line x1="10" y1="14" x2="18" y2="16"/>
-    <line x1="10" y1="22" x2="4" y2="32"/>
-    <line x1="10" y1="22" x2="16" y2="32"/>
-  </g>
-  <text x="64" y="42" fill="#00ff6a" font-family="Consolas, ui-monospace, monospace" font-size="18" font-weight="700">DRAKE'S BOX SDR</text>
+  <text x="36" y="42" fill="#00ff6a" font-family="Consolas, ui-monospace, monospace" font-size="18" font-weight="700">DRAKE'S BOX SDR</text>
   <text x="250" y="42" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="14">SDR SPIRIT BOX</text>
   <text x="36" y="66" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="13">Always-on analog sweep. Park the tuner, walk software contacts, hop the PLL only at the window edge.</text>
 
@@ -94,8 +86,8 @@
     <text x="183" y="68" text-anchor="middle" fill="#ff40b4" font-family="Consolas, ui-monospace, monospace" font-size="12" font-weight="700">C</text>
     <rect x="220" y="50" width="58" height="26" rx="2" fill="#ffb020" fill-opacity="0.12" stroke="#ffb020"/>
     <text x="249" y="68" text-anchor="middle" fill="#ffb020" font-family="Consolas, ui-monospace, monospace" font-size="12" font-weight="700">D</text>
-    <text x="150" y="102" text-anchor="middle" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="12">ENT A follows the ghost-box sweep</text>
-    <text x="150" y="122" text-anchor="middle" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="12">click sweep field to park ENT B</text>
+    <text x="150" y="102" text-anchor="middle" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="12">V1 follows the ghost-box sweep</text>
+    <text x="150" y="122" text-anchor="middle" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="12">click the spectrum to park V2</text>
   </g>
 
   <line x1="656" y1="409" x2="696" y2="409" stroke="#00ff6a" stroke-width="2" marker-end="url(#arrow)"/>

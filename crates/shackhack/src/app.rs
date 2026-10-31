@@ -202,7 +202,11 @@ impl ShackHackApp {
             );
             ui.separator();
             theme::live_badge(ui, snap.sweeping, ui.input(|i| i.time));
-            let sweep_label = if snap.sweeping { "HOLD" } else { "SWEEP" };
+            let sweep_label = if snap.sweeping {
+                "Stop scan"
+            } else {
+                "Start scan"
+            };
             if ui
                 .add(egui::Button::new(
                     RichText::new(sweep_label).monospace().strong(),

@@ -153,7 +153,7 @@ pub fn live_badge(ui: &mut Ui, sweeping: bool, time: f64) {
     let blink = ((time * 2.4) as i64) % 2 == 0;
     let (text, color) = if sweeping {
         (
-            "SWEEP LIVE",
+            "SCANNING",
             if blink {
                 ALERT
             } else {
@@ -161,7 +161,7 @@ pub fn live_badge(ui: &mut Ui, sweeping: bool, time: f64) {
             },
         )
     } else {
-        ("HOLD", PHOSPHOR_DIM)
+        ("STOPPED", PHOSPHOR_DIM)
     };
     ui.label(
         egui::RichText::new(text)
