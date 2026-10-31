@@ -245,10 +245,17 @@ function Install-WinUsb {
         Write-ZadigIni -Vid $preset.Vid -Pid $preset.Pid
         Write-Host ("Zadig preset: VID {0} PID {1} interface 0." -f $preset.Vid, $preset.Pid)
     }
-    Write-Host "Launching Zadig as Administrator."
     Write-Host "Select Bulk-In, Interface (Interface 0). Target WinUSB. Replace Driver."
     Write-Host "Do not pick the composite parent or Interface 1."
-    Start-Process -FilePath $zadig -WorkingDirectory $ToolsDir -Verb RunAs | Out-Null
+    try {
+        Write-Host "Windows will ask for Administrator. Choose Yes."
+        Start-Process -FilePath $zadig -WorkingDirectory $ToolsDir -Verb RunAs | Out-Null
+    }
+    catch {
+        Write-Host ("Administrator prompt was not accepted ({0})." -f $_.Exception.Message)
+        Write-Host "Opening Zadig anyway. Click Replace Driver and accept the next prompt."
+        Start-Process -FilePath $zadig -WorkingDirectory $ToolsDir | Out-Null
+    }
 }
 
 if ($Help) {
