@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 430" role="img" aria-label="Parked LO window with software VFOs walking inside usable bandwidth">
+  <title>Parked LO window — software VFO walk</title>
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#10141c"/>
+      <stop offset="1" stop-color="#0b0d12"/>
+    </linearGradient>
+    <linearGradient id="usable" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1a3a4a"/>
+      <stop offset="0.5" stop-color="#1e4d3a"/>
+      <stop offset="1" stop-color="#1a3a4a"/>
+    </linearGradient>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffb020"/>
+    </marker>
+  </defs>
+
+  <rect width="1120" height="430" rx="18" fill="url(#bg2)"/>
+  <rect x="1" y="1" width="1118" height="428" rx="18" fill="none" stroke="#2a3344"/>
+
+  <text x="36" y="42" fill="#e8eef6" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">Why the cheap stick stays parked</text>
+  <text x="36" y="64" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">A PLL retune on every 150 kHz step clicks. ShackHack captures 2.4 MHz at once and walks VFOs in software.</text>
+
+  <!-- Band bar -->
+  <text x="36" y="108" fill="#5c6b80" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" letter-spacing="1.6">FM BROADCAST  ·  88–108 MHz</text>
+  <rect x="36" y="118" width="1048" height="18" rx="4" fill="#1a2030"/>
+  <text x="48" y="132" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">88.0</text>
+  <text x="1052" y="132" text-anchor="end" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">108.0</text>
+
+  <!-- Capture window: 2.4 MHz of 20 MHz band = 12% width. Place around 40-52% -->
+  <!-- Band 88-108 = 20 MHz. Window 2.4 MHz → 12% of 1048 = 126 px is too small. Scale window for readability. -->
+  <!-- Use a magnified window under the band. -->
+
+  <text x="36" y="168" fill="#5c6b80" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" letter-spacing="1.6">ONE USB CAPTURE  ·  2.4 MHz</text>
+
+  <!-- full capture bar -->
+  <rect x="36" y="180" width="1048" height="70" rx="8" fill="#141820" stroke="#2a3344"/>
+  <!-- left crop 10% of 1048 ≈ 105 -->
+  <rect x="36" y="180" width="105" height="70" rx="8" fill="#3a2430"/>
+  <rect x="979" y="180" width="105" height="70" rx="8" fill="#3a2430"/>
+  <!-- usable -->
+  <rect x="141" y="180" width="838" height="70" fill="url(#usable)"/>
+
+  <text x="88" y="220" text-anchor="middle" fill="#e85d75" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">10% crop</text>
+  <text x="560" y="212" text-anchor="middle" fill="#3ecf8e" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600">usable 80%  ·  software VFOs walk here</text>
+  <text x="560" y="232" text-anchor="middle" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">tuner rolloff lives in the cropped edges</text>
+  <text x="1032" y="220" text-anchor="middle" fill="#e85d75" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">10% crop</text>
+
+  <!-- LO marker -->
+  <line x1="560" y1="174" x2="560" y2="258" stroke="#e8eef6" stroke-width="2" stroke-dasharray="3 4"/>
+  <text x="568" y="172" fill="#e8eef6" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">LO</text>
+
+  <!-- VFO markers -->
+  <line x1="250" y1="258" x2="250" y2="292" stroke="#ffb020" stroke-width="3"/>
+  <polygon points="250,258 244,270 256,270" fill="#ffb020"/>
+  <text x="250" y="312" text-anchor="middle" fill="#ffb020" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700">VFO A</text>
+  <text x="250" y="330" text-anchor="middle" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">ghost-box sweep</text>
+  <line x1="270" y1="280" x2="430" y2="280" stroke="#ffb020" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <line x1="700" y1="258" x2="700" y2="292" stroke="#3ecf8e" stroke-width="3"/>
+  <polygon points="700,258 694,270 706,270" fill="#3ecf8e"/>
+  <text x="700" y="312" text-anchor="middle" fill="#3ecf8e" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700">VFO B</text>
+  <text x="700" y="330" text-anchor="middle" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">parked on a click</text>
+
+  <line x1="820" y1="258" x2="820" y2="292" stroke="#5b8cff" stroke-width="2"/>
+  <text x="820" y="312" text-anchor="middle" fill="#5b8cff" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700">C</text>
+  <line x1="900" y1="258" x2="900" y2="292" stroke="#e85d75" stroke-width="2"/>
+  <text x="900" y="312" text-anchor="middle" fill="#e85d75" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700">D</text>
+
+  <rect x="36" y="356" width="1048" height="48" rx="10" fill="#141820" stroke="#2a3344"/>
+  <text x="560" y="386" text-anchor="middle" fill="#e8eef6" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">When A walks off the green band, hop the RTL PLL, drop 1–2 USB buffers, fade audio ~5 ms, keep sweeping.</text>
+</svg>
