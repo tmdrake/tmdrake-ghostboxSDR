@@ -1,33 +1,28 @@
 # Roadmap
 
-ShackHack v1 is a Windows desktop spirit box: analog AM/NFM/WFM, parked RTL LO, software VFOs, night-vision HUD. This is the later work, not a promise of dates.
+Drake's Box SDR v1 is a Windows desktop ghost box: analog AM/NFM/WFM, parked RTL LO, software VFOs, dark phosphor HUD. Driver facts for a port are in [drivers.md](drivers.md). This is the later work, not a promise of dates.
 
 ## Now
 
-- Windows GUI via `run.cmd`
-- WinUSB on Bulk-In Interface 0, opened at startup when that interface needs it
+- Windows GUI via `Start.vbs` / `run.cmd`. The sweep starts on open.
+- WinUSB on Bulk-In Interface 0, opened at startup when `-Check` prints `NEED`
+- Terratec `0CCD:00D7` is an E4000 and is tuned in `vendor/rs-rtl/src/e4k.rs`
 - `--synth` when no dongle is attached
 - GitHub CI on Ubuntu (fmt, test, clippy) so the crates already build on Linux
 
-## Next: Linux desktop
+## Next: Linux desktop, then a Pi 4 or Pi 5
 
 The radio crates do not call WinUSB. `rs-rtl` talks USB through `nusb`, and audio is `cpal`.
 
-1. Add a `packaging/linux/` udev rule for the same VID/PID list the Windows package uses (RTL2832/2838, TerraTec including `0CCD:00D7`, Blog/ezcap). Mode `0666` or a `plugdev` group, and skip Interface 1.
-2. Confirm `cargo run -p shackhack -- --synth` on Ubuntu, then a live stick.
-3. Document ALSA/PipeWire. No Zadig, no `.sys`.
+1. Add `packaging/linux/`: a udev rule for every id in `KNOWN_RTL_IDS`, plus a modprobe blacklist for `dvb_usb_rtl28xxu`. See [drivers.md](drivers.md). No Zadig and no `.sys`.
+2. Confirm `cargo run -p shackhack -- --synth` on Ubuntu, then a live stick (R820T and the E4000).
+3. Move that same userspace build to 64-bit Raspberry Pi OS on a Pi 4 or Pi 5. Audio out the headphone jack or HDMI.
+4. If `wgpu` fails on the Pi GPU, switch that binary to `glow` before rewriting the UI.
+5. A disk image can wait until that desktop build is boring.
 
-## Later: Raspberry Pi
+The bench board from 2014 (Model B / B+, 512 MB, one ARM11) with a Waveshare GPIO screen is recorded in [drivers.md](drivers.md). It is not this port. A Pi 3 and an unpowered hub stay out of scope.
 
-Target a Pi 4 or Pi 5 running 64-bit Raspberry Pi OS, with the same cheap RTL-SDR on a powered USB port.
-
-1. Cross-check the Ubuntu desktop build on `aarch64`. The DSP and band crates should move as-is.
-2. Prove `--synth` on the Pi desktop, then live IQ at 2.4 MS/s. Watch USB power and dropped buffers. A Pi 3 or an unpowered hub is out of scope.
-3. Audio out the 3.5 mm jack or HDMI. Keep the same sweep, gain slider, and four contacts.
-4. The HUD uses `eframe` / `wgpu`. If the Pi GPU path is unhappy, switch that binary to the `glow` backend before rewriting the UI.
-5. Package it as a script plus the udev rule. A full disk image can wait until the desktop build is boring.
-
-Headless sweep-plus-audio (no window) is optional after the Pi desktop works. It is not a substitute for the HUD.
+Headless sweep-plus-audio is optional after the Pi desktop works.
 
 ## Still out
 

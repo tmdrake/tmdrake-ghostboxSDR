@@ -1,6 +1,8 @@
 # Windows WinUSB package
 
-ShackHack does **not** build a kernel driver. Windows already includes `winusb.sys`. Cheap RTL-SDR sticks ship as DVB-T TV tuners, so Windows binds the Realtek TV driver (or nothing) to the bulk endpoint. SDR apps need **WinUSB** on **Bulk-In Interface 0** (`MI_00`).
+Full driver notes, including what a Linux or Raspberry Pi port uses instead, are in [docs/drivers.md](../../docs/drivers.md).
+
+This app does **not** build a kernel driver. Windows already includes `winusb.sys`. Cheap RTL-SDR sticks ship as DVB-T TV tuners, so Windows binds the Realtek TV driver (or nothing) to the bulk endpoint. The app needs **WinUSB** on **Bulk-In Interface 0** (`MI_00`).
 
 This folder is the package that does that bind.
 

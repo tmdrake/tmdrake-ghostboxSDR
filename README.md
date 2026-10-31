@@ -77,7 +77,7 @@ The package finds the dongle, downloads official Zadig (hash-pinned), and launch
 
 On a normal launch, ShackHack checks the stick. If Interface 0 is not WinUSB, it opens Zadig for you. Windows still shows the admin prompt, and you still click **Replace Driver**. A missing dongle does not open Zadig. `--synth` skips the check.
 
-See [packaging/windows/README.md](packaging/windows/README.md) and [docs/zadig.md](docs/zadig.md).
+See [docs/drivers.md](docs/drivers.md), [packaging/windows/README.md](packaging/windows/README.md), and [docs/zadig.md](docs/zadig.md).
 
 ## Build
 
@@ -149,13 +149,14 @@ flowchart LR
 | `crates/shackhack-bands` | Band table and tuner floors |
 | `docs/diagrams/` | RTL-SDR photo + architecture SVGs |
 | `packaging/windows/` | WinUSB bind package (Zadig, no `.sys` to build) |
-| `docs/zadig.md` | Driver notes |
+| `docs/drivers.md` | Windows WinUSB, E4000, and the Linux/Pi USB notes |
+| `docs/zadig.md` | Short WinUSB click-path |
 | `docs/bands.md` | Preset notes |
-| `docs/roadmap.md` | Linux desktop, then Raspberry Pi |
+| `docs/roadmap.md` | Linux desktop, then Raspberry Pi 4/5 |
 
 ## Later
 
-Windows is the v1 machine. A Linux desktop package (udev, no WinUSB) comes before a Raspberry Pi 4/5 build. See [docs/roadmap.md](docs/roadmap.md).
+Windows is the v1 machine. Driver notes for that machine and for a later Pi 4/5 port are in [docs/drivers.md](docs/drivers.md). The order of work is in [docs/roadmap.md](docs/roadmap.md).
 
 ## Disclaimer
 

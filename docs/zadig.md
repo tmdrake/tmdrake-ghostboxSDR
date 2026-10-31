@@ -1,6 +1,8 @@
 # Windows WinUSB package
 
-You do **not** compile a kernel driver for these sticks. Windows already ships `winusb.sys`. The stock DVB-T driver (or a missing driver) is what blocks ShackHack. Bind WinUSB to **Bulk-In Interface 0** (`MI_00`) only.
+The long note, including the Linux/Pi side and the Terratec E4000 stick, is [drivers.md](drivers.md).
+
+You do **not** compile a kernel driver for these sticks. Windows already ships `winusb.sys`. The stock DVB-T driver (or a missing driver) is what blocks the app. Bind WinUSB to **Bulk-In Interface 0** (`MI_00`) only.
 
 ShackHack talks to the stick with `rs-rtl` (pure Rust, `nusb`). There is no `rtlsdr.dll` to copy.
 
