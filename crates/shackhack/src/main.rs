@@ -1,5 +1,6 @@
 mod app;
 mod audio;
+mod theme;
 #[cfg(windows)]
 mod winusb;
 
@@ -31,11 +32,16 @@ fn main() -> anyhow::Result<()> {
         SourceKind::Rtl
     };
 
+    let mut viewport = egui::ViewportBuilder::default()
+        .with_inner_size([1280.0, 800.0])
+        .with_min_inner_size([960.0, 600.0])
+        .with_title("SHACKHACK — SLS SPIRIT BOX");
+    if let Ok(icon) = eframe::icon_data::from_png_bytes(include_bytes!("../assets/icon.png")) {
+        viewport = viewport.with_icon(icon);
+    }
+
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default()
-            .with_inner_size([1280.0, 800.0])
-            .with_min_inner_size([960.0, 600.0])
-            .with_title("ShackHack — ghost box SDR"),
+        viewport,
         ..Default::default()
     };
 
@@ -51,7 +57,8 @@ fn main() -> anyhow::Result<()> {
 fn print_help() {
     println!(
         "\
-ShackHack — RTL-SDR analog ghost box
+SHACKHACK — SLS SPIRIT BOX
+RTL-SDR analog ghost box with a night-vision investigator HUD
 
   shackhack                 open the radio (needs WinUSB on the dongle)
   shackhack --synth         fake IQ, no dongle

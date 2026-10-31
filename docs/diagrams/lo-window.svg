@@ -1,72 +1,94 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 430" role="img" aria-label="Parked LO window with software VFOs walking inside usable bandwidth">
-  <title>Parked LO window — software VFO walk</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 430" role="img" aria-label="Parked LO window with software contacts walking inside usable bandwidth">
+  <title>Parked LO window — software contact walk</title>
   <defs>
     <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#10141c"/>
-      <stop offset="1" stop-color="#0b0d12"/>
+      <stop offset="0" stop-color="#060c08"/>
+      <stop offset="1" stop-color="#030604"/>
     </linearGradient>
     <linearGradient id="usable" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#1a3a4a"/>
-      <stop offset="0.5" stop-color="#1e4d3a"/>
-      <stop offset="1" stop-color="#1a3a4a"/>
+      <stop offset="0" stop-color="#062010"/>
+      <stop offset="0.5" stop-color="#0a3a18"/>
+      <stop offset="1" stop-color="#062010"/>
     </linearGradient>
     <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffb020"/>
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00ff6a"/>
     </marker>
   </defs>
 
-  <rect width="1120" height="430" rx="18" fill="url(#bg2)"/>
-  <rect x="1" y="1" width="1118" height="428" rx="18" fill="none" stroke="#2a3344"/>
+  <rect width="1120" height="430" rx="4" fill="url(#bg2)"/>
+  <rect x="1" y="1" width="1118" height="428" rx="4" fill="none" stroke="#004620"/>
+  <path d="M 12 28 L 12 12 L 28 12" fill="none" stroke="#00ff6a" stroke-width="2"/>
+  <path d="M 1108 28 L 1108 12 L 1092 12" fill="none" stroke="#00ff6a" stroke-width="2"/>
+  <path d="M 12 402 L 12 418 L 28 418" fill="none" stroke="#00ff6a" stroke-width="2"/>
+  <path d="M 1108 402 L 1108 418 L 1092 418" fill="none" stroke="#00ff6a" stroke-width="2"/>
 
-  <text x="36" y="42" fill="#e8eef6" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">Why the cheap stick stays parked</text>
-  <text x="36" y="64" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">A PLL retune on every 150 kHz step clicks. ShackHack captures 2.4 MHz at once and walks VFOs in software.</text>
+  <text x="36" y="42" fill="#00ff6a" font-family="Consolas, ui-monospace, monospace" font-size="16" font-weight="700">Why the cheap stick stays parked</text>
+  <text x="36" y="64" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="13">A PLL retune on every 150 kHz step clicks. ShackHack captures 2.4 MHz at once and walks contacts in software.</text>
 
-  <!-- Band bar -->
-  <text x="36" y="108" fill="#5c6b80" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" letter-spacing="1.6">FM BROADCAST  ·  88–108 MHz</text>
-  <rect x="36" y="118" width="1048" height="18" rx="4" fill="#1a2030"/>
-  <text x="48" y="132" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">88.0</text>
-  <text x="1052" y="132" text-anchor="end" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">108.0</text>
+  <text x="36" y="108" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="11" letter-spacing="1.6">FM BROADCAST  ·  88–108 MHz</text>
+  <rect x="36" y="118" width="1048" height="18" rx="2" fill="#0a140c"/>
+  <text x="48" y="132" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="11">88.0</text>
+  <text x="1052" y="132" text-anchor="end" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="11">108.0</text>
 
-  <!-- Capture window: 2.4 MHz of 20 MHz band = 12% width. Place around 40-52% -->
-  <!-- Band 88-108 = 20 MHz. Window 2.4 MHz → 12% of 1048 = 126 px is too small. Scale window for readability. -->
-  <!-- Use a magnified window under the band. -->
+  <text x="36" y="168" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="11" letter-spacing="1.6">ONE USB CAPTURE  ·  2.4 MHz</text>
 
-  <text x="36" y="168" fill="#5c6b80" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" letter-spacing="1.6">ONE USB CAPTURE  ·  2.4 MHz</text>
-
-  <!-- full capture bar -->
-  <rect x="36" y="180" width="1048" height="70" rx="8" fill="#141820" stroke="#2a3344"/>
-  <!-- left crop 10% of 1048 ≈ 105 -->
-  <rect x="36" y="180" width="105" height="70" rx="8" fill="#3a2430"/>
-  <rect x="979" y="180" width="105" height="70" rx="8" fill="#3a2430"/>
-  <!-- usable -->
+  <rect x="36" y="180" width="1048" height="70" rx="2" fill="#060c08" stroke="#004620"/>
+  <rect x="36" y="180" width="105" height="70" rx="2" fill="#2a0c10"/>
+  <rect x="979" y="180" width="105" height="70" rx="2" fill="#2a0c10"/>
   <rect x="141" y="180" width="838" height="70" fill="url(#usable)"/>
 
-  <text x="88" y="220" text-anchor="middle" fill="#e85d75" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">10% crop</text>
-  <text x="560" y="212" text-anchor="middle" fill="#3ecf8e" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600">usable 80%  ·  software VFOs walk here</text>
-  <text x="560" y="232" text-anchor="middle" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">tuner rolloff lives in the cropped edges</text>
-  <text x="1032" y="220" text-anchor="middle" fill="#e85d75" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">10% crop</text>
+  <text x="88" y="220" text-anchor="middle" fill="#ff3838" font-family="Consolas, ui-monospace, monospace" font-size="11">10% crop</text>
+  <text x="560" y="212" text-anchor="middle" fill="#00ff6a" font-family="Consolas, ui-monospace, monospace" font-size="14" font-weight="600">usable 80%  ·  software contacts walk here</text>
+  <text x="560" y="232" text-anchor="middle" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="11">tuner rolloff lives in the cropped edges</text>
+  <text x="1032" y="220" text-anchor="middle" fill="#ff3838" font-family="Consolas, ui-monospace, monospace" font-size="11">10% crop</text>
 
-  <!-- LO marker -->
-  <line x1="560" y1="174" x2="560" y2="258" stroke="#e8eef6" stroke-width="2" stroke-dasharray="3 4"/>
-  <text x="568" y="172" fill="#e8eef6" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">LO</text>
+  <line x1="560" y1="174" x2="560" y2="258" stroke="#beffd2" stroke-width="2" stroke-dasharray="3 4"/>
+  <text x="568" y="172" fill="#beffd2" font-family="Consolas, ui-monospace, monospace" font-size="11">LO</text>
 
-  <!-- VFO markers -->
-  <line x1="250" y1="258" x2="250" y2="292" stroke="#ffb020" stroke-width="3"/>
-  <polygon points="250,258 244,270 256,270" fill="#ffb020"/>
-  <text x="250" y="312" text-anchor="middle" fill="#ffb020" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700">VFO A</text>
-  <text x="250" y="330" text-anchor="middle" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">ghost-box sweep</text>
-  <line x1="270" y1="280" x2="430" y2="280" stroke="#ffb020" stroke-width="2" marker-end="url(#arrow2)"/>
+  <g transform="translate(250,248)" stroke="#00ff6a" fill="#00ff6a" stroke-width="1.4">
+    <circle cx="0" cy="6" r="4" fill="none"/>
+    <line x1="0" y1="10" x2="0" y2="22"/>
+    <line x1="0" y1="14" x2="-8" y2="16"/>
+    <line x1="0" y1="14" x2="8" y2="16"/>
+    <line x1="0" y1="22" x2="-6" y2="32"/>
+    <line x1="0" y1="22" x2="6" y2="32"/>
+  </g>
+  <line x1="250" y1="284" x2="250" y2="300" stroke="#00ff6a" stroke-width="2"/>
+  <text x="250" y="318" text-anchor="middle" fill="#00ff6a" font-family="Consolas, ui-monospace, monospace" font-size="13" font-weight="700">ENT A</text>
+  <text x="250" y="334" text-anchor="middle" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="11">ghost-box sweep</text>
+  <line x1="270" y1="292" x2="430" y2="292" stroke="#00ff6a" stroke-width="2" marker-end="url(#arrow2)"/>
 
-  <line x1="700" y1="258" x2="700" y2="292" stroke="#3ecf8e" stroke-width="3"/>
-  <polygon points="700,258 694,270 706,270" fill="#3ecf8e"/>
-  <text x="700" y="312" text-anchor="middle" fill="#3ecf8e" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700">VFO B</text>
-  <text x="700" y="330" text-anchor="middle" fill="#8aa0b8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11">parked on a click</text>
+  <g transform="translate(700,248)" stroke="#00dcff" fill="#00dcff" stroke-width="1.4">
+    <circle cx="0" cy="6" r="4" fill="none"/>
+    <line x1="0" y1="10" x2="0" y2="22"/>
+    <line x1="0" y1="14" x2="-8" y2="16"/>
+    <line x1="0" y1="14" x2="8" y2="16"/>
+    <line x1="0" y1="22" x2="-6" y2="32"/>
+    <line x1="0" y1="22" x2="6" y2="32"/>
+  </g>
+  <line x1="700" y1="284" x2="700" y2="300" stroke="#00dcff" stroke-width="2"/>
+  <text x="700" y="318" text-anchor="middle" fill="#00dcff" font-family="Consolas, ui-monospace, monospace" font-size="13" font-weight="700">ENT B</text>
+  <text x="700" y="334" text-anchor="middle" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="11">parked on a click</text>
 
-  <line x1="820" y1="258" x2="820" y2="292" stroke="#5b8cff" stroke-width="2"/>
-  <text x="820" y="312" text-anchor="middle" fill="#5b8cff" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700">C</text>
-  <line x1="900" y1="258" x2="900" y2="292" stroke="#e85d75" stroke-width="2"/>
-  <text x="900" y="312" text-anchor="middle" fill="#e85d75" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700">D</text>
+  <g transform="translate(820,256)" stroke="#ff40b4" fill="#ff40b4" stroke-width="1.3">
+    <circle cx="0" cy="5" r="3.2" fill="none"/>
+    <line x1="0" y1="8" x2="0" y2="18"/>
+    <line x1="0" y1="12" x2="-6" y2="13"/>
+    <line x1="0" y1="12" x2="6" y2="13"/>
+    <line x1="0" y1="18" x2="-5" y2="26"/>
+    <line x1="0" y1="18" x2="5" y2="26"/>
+  </g>
+  <text x="820" y="318" text-anchor="middle" fill="#ff40b4" font-family="Consolas, ui-monospace, monospace" font-size="13" font-weight="700">C</text>
+  <g transform="translate(900,256)" stroke="#ffb020" fill="#ffb020" stroke-width="1.3">
+    <circle cx="0" cy="5" r="3.2" fill="none"/>
+    <line x1="0" y1="8" x2="0" y2="18"/>
+    <line x1="0" y1="12" x2="-6" y2="13"/>
+    <line x1="0" y1="12" x2="6" y2="13"/>
+    <line x1="0" y1="18" x2="-5" y2="26"/>
+    <line x1="0" y1="18" x2="5" y2="26"/>
+  </g>
+  <text x="900" y="318" text-anchor="middle" fill="#ffb020" font-family="Consolas, ui-monospace, monospace" font-size="13" font-weight="700">D</text>
 
-  <rect x="36" y="356" width="1048" height="48" rx="10" fill="#141820" stroke="#2a3344"/>
-  <text x="560" y="386" text-anchor="middle" fill="#e8eef6" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">When A walks off the green band, hop the RTL PLL, drop 1–2 USB buffers, fade audio ~5 ms, keep sweeping.</text>
+  <rect x="36" y="356" width="1048" height="48" rx="2" fill="#060c08" stroke="#004620"/>
+  <text x="560" y="386" text-anchor="middle" fill="#beffd2" font-family="Consolas, ui-monospace, monospace" font-size="13">When A walks off the green band, hop the RTL PLL, drop 1–2 USB buffers, fade audio ~5 ms, keep sweeping.</text>
 </svg>

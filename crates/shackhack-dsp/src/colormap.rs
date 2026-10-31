@@ -7,9 +7,18 @@ pub fn turbo(t: f32) -> [u8; 4] {
     [r, g, b, 255]
 }
 
+/// Night-vision phosphor: black → dark green → lime → hot white.
+pub fn nv(t: f32) -> [u8; 4] {
+    let x = t.clamp(0.0, 1.0);
+    let r = (x * x * 210.0).clamp(0.0, 255.0) as u8;
+    let g = (8.0 + x * 247.0).clamp(0.0, 255.0) as u8;
+    let b = (x * x * 90.0).clamp(0.0, 255.0) as u8;
+    [r, g, b, 255]
+}
+
 pub fn db_to_color(db: f32, floor: f32, ceil: f32) -> [u8; 4] {
     let span = (ceil - floor).max(8.0);
-    turbo((db - floor) / span)
+    nv((db - floor) / span)
 }
 
 #[cfg(test)]
@@ -20,5 +29,8 @@ mod tests {
     fn endpoints_are_opaque() {
         assert_eq!(turbo(0.0)[3], 255);
         assert_eq!(turbo(1.0)[3], 255);
+        assert_eq!(nv(0.0)[3], 255);
+        assert_eq!(nv(1.0)[3], 255);
+        assert!(nv(1.0)[1] > nv(0.0)[1]);
     }
 }

@@ -1,12 +1,17 @@
 # ShackHack
 
-RTL-SDR analog **ghost box** / shack-hack sweeper. Fast software-VFO scan across a band, always-on audio (no squelch), SDR#-style waterfall, and four VFOs inside the live 2.4 MHz window.
+**SLS SPIRIT BOX** — RTL-SDR analog ghost box with a night-vision investigator HUD.
+
+Fast software-VFO scan across a band, always-on audio (no squelch), phosphor waterfall, and four glowing **contacts** (ENT A–D) inside the live 2.4 MHz window.
 
 Built for a **cheap USB RTL-SDR** (RTL2832U + R820T/R820T2). No upconverter, no GNU Radio, no Airspy.
 
 [![ci](https://github.com/tmdrake/tmdrake-ghostboxSDR/actions/workflows/ci.yml/badge.svg)](https://github.com/tmdrake/tmdrake-ghostboxSDR/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
+<p align="center">
+  <img src="docs/diagrams/icon.png" alt="ShackHack SLS stick-figure icon" width="128">
+</p>
 <p align="center">
   <img src="docs/diagrams/cheap-rtl-sdr.jpg" alt="Cheap generic USB RTL-SDR dongle with a whip antenna" width="880">
 </p>
@@ -17,6 +22,10 @@ Built for a **cheap USB RTL-SDR** (RTL2832U + R820T/R820T2). No upconverter, no 
 A Radio Shack-style spirit box races through FM and never stops. ShackHack does that on a cheap RTL-SDR, but the **tuner stays parked** on a 2.4 MHz chunk and a **software VFO** walks the channels. The PLL only hops when the sweep walks off the window, so tuning looks smooth and the audio click is short.
 
 Default shack-hack: FM broadcast **88–108 MHz**, **WFM**, **150 kHz** steps, **30 ms** dwell, **bounce**, **29.6 dB** gain.
+
+## Look
+
+Night-vision phosphor HUD in the spirit of an SLS camera kit: dark viewfinder, glowing stick-figure **contacts** on the sweep field, NV waterfall, blinking **SWEEP LIVE**, and an 8-cell **SIG** bar driven by audio RMS. Original ShackHack branding.
 
 ## Diagram — cheap RTL-SDR to speakers
 
@@ -50,7 +59,7 @@ Typical cheap kit:
 The R820T has about **0–49.6 dB** of stepped RF gain. ShackHack exposes it as a **Gain (dB)** slider on the top bar and snaps to the tuner's real steps.
 
 - Start around **25–30 dB**.
-- If the spectrum goes solid yellow/red or you see **OVERLOAD**, drop gain.
+- If the NV waterfall goes solid hot-white or you see **OVERLOAD**, drop gain.
 - Tuner AGC is not used on FM broadcast; strong stations will slam the ADC.
 
 ## Windows driver (WinUSB package)
@@ -87,13 +96,14 @@ cargo run --release -p shackhack -- --synth
 
 ## Controls
 
-- **Sweep / Stop** — ghost-box motion vs listen
+- **HOLD / SWEEP** — freeze the box vs keep racing
 - **Band** — FM, airband, VHF, NOAA, GMRS, 70 cm, …
 - **Mode** — bounce, forward, backward, random
 - **Dwell / Step** — shack-hack speed
 - **Gain** — RF gain in dB
-- Click the waterfall while sweeping to **park VFO B** on a signal and mix it in
-- Stop the sweep, then click to tune **VFO A**
+- **SIG** — audio-RMS LED bar (green → amber → red)
+- Click the sweep field while sweeping to **park ENT B** on a signal and mix it in
+- HOLD the sweep, then click to tune **ENT A**
 
 ## Analog voice presets (US)
 
@@ -121,7 +131,8 @@ flowchart LR
 
 | Path | What |
 |---|---|
-| `crates/shackhack` | Window, waterfall, gain slider, audio out |
+| `crates/shackhack` | SLS HUD, NV waterfall, gain slider, audio out |
+| `crates/shackhack/assets/` | Window icon (phosphor stick figure) |
 | `crates/shackhack-sdr` | RTL open/hop/gain, synth IQ, radio thread |
 | `crates/shackhack-dsp` | FFT, sweeper, AM/NFM/WFM VFOs |
 | `crates/shackhack-bands` | Band table and tuner floors |

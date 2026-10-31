@@ -1,4 +1,5 @@
 use crate::audio::AudioOut;
+use crate::theme::{self, CONTACT, PHOSPHOR, PHOSPHOR_DIM, PHOSPHOR_HOT, SCOPE, VOID};
 use eframe::egui::{
     self, Align, Color32, FontId, PointerButton, Pos2, Rect, RichText, Sense, Stroke, Ui, Vec2,
 };
@@ -7,13 +8,6 @@ use shackhack_dsp::colormap::db_to_color;
 use shackhack_dsp::sweep::Mode;
 use shackhack_dsp::vfo::{DemodKind, VFO_COUNT};
 use shackhack_sdr::{Command, RadioHandle, SourceKind};
-
-const VFO_COLORS: [Color32; VFO_COUNT] = [
-    Color32::from_rgb(255, 176, 32),
-    Color32::from_rgb(62, 207, 142),
-    Color32::from_rgb(91, 140, 255),
-    Color32::from_rgb(232, 93, 117),
-];
 
 pub struct ShackHackApp {
     radio: RadioHandle,
@@ -32,7 +26,7 @@ pub struct ShackHackApp {
 
 impl ShackHackApp {
     pub fn new(cc: &eframe::CreationContext<'_>, kind: SourceKind) -> Self {
-        cc.egui_ctx.set_visuals(egui::Visuals::dark());
+        theme::apply(&cc.egui_ctx);
         let radio = shackhack_sdr::start(kind);
         let audio = AudioOut::start(radio.audio.clone()).ok();
         Self {
@@ -76,9 +70,13 @@ impl eframe::App for ShackHackApp {
             });
         egui::CentralPanel::default().show(ctx, |ui| {
             if let Some(err) = &snap.error {
-                ui.colored_label(Color32::from_rgb(255, 120, 80), err);
+                ui.colored_label(theme::ALERT, err);
                 ui.label(
-                    "No kernel driver to compile. Bind Microsoft WinUSB to Bulk-In Interface 0.",
+                    RichText::new(
+                        "No kernel driver to compile. Bind Microsoft WinUSB to Bulk-In Interface 0.",
+                    )
+                    .monospace()
+                    .color(PHOSPHOR_DIM),
                 );
                 #[cfg(windows)]
                 {
@@ -100,21 +98,30 @@ impl eframe::App for ShackHackApp {
                 }
                 ui.separator();
             }
-            ui.label(
-                RichText::new(format!(
-                    "{}   {} – {:.1}–{:.0} MHz   LO {:.3} MHz",
-                    snap.device_label,
-                    if snap.hf_ok {
-                        "HF ok"
-                    } else {
-                        "tuner ≥ 24 MHz"
-                    },
-                    snap.tuner_min_hz as f64 / 1e6,
-                    snap.tuner_max_hz as f64 / 1e6,
-                    snap.lo_hz / 1e6
-                ))
-                .weak(),
-            );
+            ui.horizontal(|ui| {
+                ui.label(
+                    RichText::new("SLS SPIRIT BOX")
+                        .monospace()
+                        .size(11.0)
+                        .color(PHOSPHOR_DIM),
+                );
+                ui.separator();
+                ui.label(
+                    RichText::new(format!(
+                        "{}   {}   LO {:.3} MHz",
+                        snap.device_label,
+                        if snap.hf_ok {
+                            "HF DEPTH"
+                        } else {
+                            "FLOOR 24 MHz"
+                        },
+                        snap.lo_hz / 1e6
+                    ))
+                    .monospace()
+                    .size(12.0)
+                    .color(PHOSPHOR_DIM),
+                );
+            });
             self.band_overview(ui, &snap);
             ui.add_space(4.0);
             let spec_h = 110.0;
@@ -146,15 +153,24 @@ impl ShackHackApp {
                 RichText::new("SHACKHACK")
                     .strong()
                     .size(18.0)
-                    .color(VFO_COLORS[0]),
+                    .color(PHOSPHOR)
+                    .monospace(),
+            );
+            ui.label(
+                RichText::new("SLS")
+                    .monospace()
+                    .size(12.0)
+                    .color(PHOSPHOR_DIM),
             );
             ui.separator();
-            let sweep_label = if snap.sweeping {
-                "■ Stop"
-            } else {
-                "▶ Sweep"
-            };
-            if ui.button(sweep_label).clicked() {
+            theme::live_badge(ui, snap.sweeping, ui.input(|i| i.time));
+            let sweep_label = if snap.sweeping { "HOLD" } else { "SWEEP" };
+            if ui
+                .add(egui::Button::new(
+                    RichText::new(sweep_label).monospace().strong(),
+                ))
+                .clicked()
+            {
                 self.radio.send(Command::SetSweeping(!snap.sweeping));
             }
             ui.separator();
@@ -162,9 +178,14 @@ impl ShackHackApp {
             ui.label(
                 RichText::new(format_hz(display))
                     .font(FontId::monospace(22.0))
-                    .color(VFO_COLORS[0]),
+                    .color(PHOSPHOR),
             );
-            ui.label(RichText::new(kind_str(snap.demod)).monospace().size(16.0));
+            ui.label(
+                RichText::new(kind_str(snap.demod))
+                    .monospace()
+                    .size(16.0)
+                    .color(PHOSPHOR_HOT),
+            );
             ui.separator();
             ui.label("Band");
             egui::ComboBox::from_id_salt("band")
@@ -214,7 +235,7 @@ impl ShackHackApp {
                 self.gain_db = snap.gain_tenth_db as f32 / 10.0;
             }
             if snap.clip {
-                ui.colored_label(Color32::RED, "OVERLOAD — drop gain");
+                ui.colored_label(theme::ALERT, "OVERLOAD — drop gain");
             }
             ui.separator();
             ui.label("Dwell");
@@ -247,6 +268,8 @@ impl ShackHackApp {
                 }
             }
             ui.separator();
+            ui.label(RichText::new("SIG").monospace().color(PHOSPHOR_DIM));
+            theme::emf_bar(ui, snap.audio_rms);
             ui.label("Vol");
             let mut vol = snap.volume;
             if ui.add(egui::Slider::new(&mut vol, 0.0..=1.2)).changed() {
@@ -262,7 +285,7 @@ impl ShackHackApp {
 
     fn bottom_bar(&mut self, ui: &mut Ui, snap: &shackhack_sdr::Snapshot) {
         ui.horizontal(|ui| {
-            ui.label("VFOs");
+            ui.label(RichText::new("CONTACTS").monospace().color(PHOSPHOR_DIM));
             for i in 0..VFO_COUNT {
                 let v = &snap.vfos[i];
                 let name = ['A', 'B', 'C', 'D'][i];
@@ -271,7 +294,9 @@ impl ShackHackApp {
                 if ui
                     .checkbox(
                         &mut on,
-                        RichText::new(format!("VFO {name}")).color(VFO_COLORS[i]),
+                        RichText::new(format!("ENT {name}"))
+                            .monospace()
+                            .color(CONTACT[i]),
                     )
                     .changed()
                 {
@@ -279,7 +304,7 @@ impl ShackHackApp {
                 }
                 ui.monospace(format_hz(if i == 0 { v.display_hz } else { v.freq_hz }));
                 if !v.in_window {
-                    ui.colored_label(Color32::GRAY, "off-window");
+                    ui.colored_label(PHOSPHOR_DIM, "off-field");
                 }
                 if i > 0 {
                     let mut mix = v.mix;
@@ -309,9 +334,11 @@ impl ShackHackApp {
             ui.with_layout(egui::Layout::right_to_left(Align::Center), |ui| {
                 ui.label(
                     RichText::new(
-                        "click waterfall to park VFO B · receive only · analog ghost box",
+                        "click sweep field to park ENT B  ·  receive only  ·  analog ghost box",
                     )
-                    .weak(),
+                    .monospace()
+                    .size(11.0)
+                    .color(PHOSPHOR_DIM),
                 );
             });
         });
@@ -341,7 +368,7 @@ impl ShackHackApp {
         let (rect, _r) =
             ui.allocate_exact_size(Vec2::new(ui.available_width(), 28.0), Sense::hover());
         let painter = ui.painter_at(rect);
-        painter.rect_filled(rect, 2.0, Color32::from_rgb(12, 14, 20));
+        painter.rect_filled(rect, 0.0, VOID);
         let n = self.overview.len().max(1);
         let w = rect.width();
         let h = rect.height();
@@ -367,43 +394,42 @@ impl ShackHackApp {
         painter.rect_stroke(
             win,
             0.0,
-            Stroke::new(1.5_f32, Color32::WHITE),
+            Stroke::new(1.5_f32, PHOSPHOR),
             egui::StrokeKind::Inside,
         );
         painter.text(
-            rect.left_top() + Vec2::new(6.0, 6.0),
+            rect.left_top() + Vec2::new(10.0, 6.0),
             egui::Align2::LEFT_TOP,
             format!(
                 "{:.3} – {:.3} MHz",
                 snap.min_hz as f64 / 1e6,
                 snap.max_hz as f64 / 1e6
             ),
-            FontId::proportional(11.0),
-            Color32::WHITE,
+            FontId::monospace(11.0),
+            PHOSPHOR,
         );
+        theme::hud_frame(&painter, rect, "");
     }
 
     fn paint_spectrum(&self, ui: &mut Ui, rect: Rect, snap: &shackhack_sdr::Snapshot) {
         let painter = ui.painter_at(rect);
-        painter.rect_filled(rect, 2.0, Color32::from_rgb(8, 10, 16));
-        if snap.spectrum.len() < 8 {
-            return;
+        painter.rect_filled(rect, 0.0, SCOPE);
+        theme::scanlines(&painter, rect);
+        if snap.spectrum.len() >= 8 {
+            let floor = snap.floor_db - 8.0;
+            let ceil = snap.peak_db.max(floor + 20.0);
+            let n = snap.spectrum.len();
+            let mut pts = Vec::with_capacity(n);
+            for (i, db) in snap.spectrum.iter().enumerate() {
+                let x = rect.left() + i as f32 / (n - 1) as f32 * rect.width();
+                let t = ((*db - floor) / (ceil - floor)).clamp(0.0, 1.0);
+                let y = rect.bottom() - t * rect.height();
+                pts.push(Pos2::new(x, y));
+            }
+            painter.add(egui::Shape::line(pts, Stroke::new(1.4_f32, PHOSPHOR)));
+            self.overlay_vfos(&painter, rect, snap, true);
         }
-        let floor = snap.floor_db - 8.0;
-        let ceil = snap.peak_db.max(floor + 20.0);
-        let n = snap.spectrum.len();
-        let mut pts = Vec::with_capacity(n);
-        for (i, db) in snap.spectrum.iter().enumerate() {
-            let x = rect.left() + i as f32 / (n - 1) as f32 * rect.width();
-            let t = ((*db - floor) / (ceil - floor)).clamp(0.0, 1.0);
-            let y = rect.bottom() - t * rect.height();
-            pts.push(Pos2::new(x, y));
-        }
-        painter.add(egui::Shape::line(
-            pts,
-            Stroke::new(1.2_f32, Color32::from_rgb(180, 220, 255)),
-        ));
-        self.overlay_vfos(&painter, rect, snap, true);
+        theme::hud_frame(&painter, rect, "SWEEP FIELD");
     }
 
     fn paint_waterfall(
@@ -434,9 +460,12 @@ impl ShackHackApp {
                 Color32::WHITE,
             );
         } else {
-            ui.painter_at(rect).rect_filled(rect, 2.0, Color32::BLACK);
+            ui.painter_at(rect).rect_filled(rect, 0.0, VOID);
         }
-        self.overlay_vfos(&ui.painter_at(rect), rect, snap, false);
+        let painter = ui.painter_at(rect);
+        theme::scanlines(&painter, rect);
+        self.overlay_vfos(&painter, rect, snap, false);
+        theme::hud_frame(&painter, rect, "NV WATERFALL");
 
         if ui.input(|i| i.pointer.button_released(PointerButton::Primary)) {
             if let Some(pos) = ui.input(|i| i.pointer.interact_pos()) {
@@ -472,7 +501,7 @@ impl ShackHackApp {
             let bw = v.demod.passband_hz();
             let x0 = hz_to_x(hz - bw * 0.5, rect, snap);
             let x1 = hz_to_x(hz + bw * 0.5, rect, snap);
-            let color = VFO_COLORS[i];
+            let color = CONTACT[i];
             if fill {
                 painter.rect_filled(
                     Rect::from_min_max(Pos2::new(x0, rect.top()), Pos2::new(x1, rect.bottom())),
@@ -481,6 +510,16 @@ impl ShackHackApp {
                 );
             }
             painter.vline(x, rect.y_range(), Stroke::new(1.5_f32, color));
+            let scale = if fill { 0.85 } else { 0.65 };
+            theme::sls_figure(painter, x, rect.top() + 2.0, color, scale);
+            let name = ['A', 'B', 'C', 'D'][i];
+            painter.text(
+                Pos2::new(x + 8.0, rect.top() + 4.0),
+                egui::Align2::LEFT_TOP,
+                format!("ENT {name}"),
+                FontId::monospace(10.0),
+                color,
+            );
         }
     }
 
