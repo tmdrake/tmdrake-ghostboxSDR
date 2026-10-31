@@ -19,7 +19,7 @@ Built for a **cheap USB RTL-SDR** (RTL2832U + R820T/R820T2). No upconverter, no 
 
 ## What it is
 
-A Radio Shack-style spirit box races through FM and never stops. ShackHack does that on a cheap RTL-SDR, but the **tuner stays parked** on a 2.4 MHz chunk and a **software VFO** walks the channels. The PLL only hops when the sweep walks off the window, so tuning looks smooth and the audio click is short.
+Drake's Box SDR is a software ghost box in the line of **Frank Sumption's** ghost box (Frank's Box, 2002). Sumption's radio sweeps a band and leaves the audio open, with no squelch stop. The later Radio Shack "shack hack" is the same idea in a hacked consumer radio. This app does that sweep on a cheap RTL-SDR, but the **tuner stays parked** on a 2.4 MHz chunk and **software VFOs** walk the channels. The PLL only hops when the sweep walks off the window, so tuning looks smooth and the audio click is short.
 
 Default shack-hack: FM broadcast **88–108 MHz**, **WFM**, **150 kHz** steps, **30 ms** dwell, **bounce**, **29.6 dB** gain.
 
