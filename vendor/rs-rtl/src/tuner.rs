@@ -30,6 +30,8 @@ pub enum TunerType {
     R820T,
     /// R828D — found in RTL-SDR Blog V4 and some other dongles, I2C address 0x74.
     R828D,
+    /// Elonics E4000 — Terratec T Stick PLUS and other early DVB sticks.
+    E4000,
 }
 
 // ── Known tuner I2C addresses ───────────────────────────────────────────────
@@ -846,7 +848,7 @@ impl R82xx {
         // VCO power reference differs between R820T and R828D
         let vco_power_ref: u8 = match self.tuner_type {
             TunerType::R820T => 2,
-            TunerType::R828D => 1,
+            TunerType::R828D | TunerType::E4000 => 1,
         };
 
         if vco_fine_tune > vco_power_ref {
@@ -1164,6 +1166,85 @@ impl R82xx {
 
         debug!("set_bandwidth: bw={}Hz, if_freq={}Hz", bw, self.int_freq);
         Ok(self.int_freq)
+    }
+}
+
+/// R820T/R828D or Elonics E4000. The RTL2832 talks to either one over I2C.
+#[derive(Clone)]
+pub enum RadioTuner {
+    R82(R82xx),
+    E4k(crate::e4k::E4k),
+}
+
+impl RadioTuner {
+    pub fn tuner_type(&self) -> TunerType {
+        match self {
+            RadioTuner::R82(t) => t.tuner_type(),
+            RadioTuner::E4k(_) => TunerType::E4000,
+        }
+    }
+
+    pub fn if_freq(&self) -> u32 {
+        match self {
+            RadioTuner::R82(t) => t.if_freq(),
+            RadioTuner::E4k(t) => t.if_freq(),
+        }
+    }
+
+    pub fn gains(&self) -> &[i32] {
+        match self {
+            RadioTuner::R82(t) => t.gains(),
+            RadioTuner::E4k(t) => t.gains(),
+        }
+    }
+
+    pub fn init(&mut self, dev: &Device) -> Result<()> {
+        match self {
+            RadioTuner::R82(t) => t.init(dev),
+            RadioTuner::E4k(t) => t.init(dev),
+        }
+    }
+
+    pub fn standby(&mut self, dev: &Device) -> Result<()> {
+        match self {
+            RadioTuner::R82(t) => t.standby(dev),
+            RadioTuner::E4k(t) => t.standby(dev),
+        }
+    }
+
+    pub fn set_freq(&mut self, dev: &Device, freq: u32) -> Result<()> {
+        match self {
+            RadioTuner::R82(t) => t.set_freq(dev, freq),
+            RadioTuner::E4k(t) => t.set_freq(dev, freq),
+        }
+    }
+
+    pub fn set_gain_auto(&mut self, dev: &Device) -> Result<()> {
+        match self {
+            RadioTuner::R82(t) => t.set_gain_auto(dev),
+            RadioTuner::E4k(t) => t.set_gain_auto(dev),
+        }
+    }
+
+    pub fn set_gain_manual(&mut self, dev: &Device, gain_tenth_db: i32) -> Result<()> {
+        match self {
+            RadioTuner::R82(t) => t.set_gain_manual(dev, gain_tenth_db),
+            RadioTuner::E4k(t) => t.set_gain_manual(dev, gain_tenth_db),
+        }
+    }
+
+    pub fn read_gain(&self, dev: &Device) -> Result<i32> {
+        match self {
+            RadioTuner::R82(t) => t.read_gain(dev),
+            RadioTuner::E4k(t) => t.read_gain(dev),
+        }
+    }
+
+    pub fn set_bandwidth(&mut self, dev: &Device, bw: u32, rate: u32) -> Result<u32> {
+        match self {
+            RadioTuner::R82(t) => t.set_bandwidth(dev, bw, rate),
+            RadioTuner::E4k(t) => t.set_bandwidth(dev, bw, rate),
+        }
     }
 }
 

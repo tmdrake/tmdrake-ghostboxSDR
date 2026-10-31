@@ -35,10 +35,6 @@ pub enum Error {
     #[error("no supported tuner found (checked R820T at 0x34, R828D at 0x74)")]
     TunerNotFound,
 
-    /// Elonics E4000, used by the Terratec T Stick PLUS and some other DVB sticks.
-    #[error("found an Elonics E4000 tuner. ShackHack tunes R820T and R828D sticks only")]
-    E4000Unsupported,
-
     /// PLL failed to lock at the requested frequency.
     #[error("PLL failed to lock at {freq_hz} Hz")]
     PllLockFailed {

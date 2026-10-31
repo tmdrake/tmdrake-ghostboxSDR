@@ -44,7 +44,7 @@ Retuning the R820T on every 150 kHz step would click. ShackHack keeps the hardwa
 | Stick | Range |
 |---|---|
 | Generic R820T / R820T2 / Nooelec | **~24 MHz – 1766 MHz** |
-| Terratec T Stick PLUS (`0ccd:00d7`, E4000) | Seen and bound to WinUSB. The tuner chip is not an R820T, so this build does not tune it |
+| Terratec T Stick PLUS (`0ccd:00d7`, E4000) | About **52 MHz – 1700 MHz**. Zero-IF, so the FM sweep works |
 | RTL-SDR Blog V4 | **~500 kHz – 1766 MHz** (built-in HF) |
 
 AM broadcast and HF ham need HF (V4 or a V3 in direct sampling). Lowest analog **voice** on a generic stick is **VHF-low 30–50 MHz**. Instantaneous bandwidth is ~2.4 MHz.

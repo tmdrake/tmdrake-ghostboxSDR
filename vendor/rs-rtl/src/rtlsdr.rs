@@ -31,6 +31,11 @@ use crate::device::{self, Device};
 use crate::error::{Error, Result};
 use crate::tuner::{self, KNOWN_TUNERS, R82xx, TunerType};
 
+enum FoundTuner {
+    R82 { kind: TunerType, addr: u8 },
+    E4k,
+}
+
 // ── Constants ───────────────────────────────────────────────────────────────
 
 /// Default RTL2832U crystal frequency (Hz).
@@ -255,7 +260,7 @@ pub struct RtlSdr {
     #[allow(dead_code)]
     usb_device: nusb::Device,
     /// R82xx tuner driver.
-    tuner: R82xx,
+    tuner: tuner::RadioTuner,
     /// Current center frequency (Hz).
     center_freq: u32,
     /// Current sample rate (Hz).
@@ -317,12 +322,12 @@ impl RtlSdr {
         let mut sdr = Self {
             dev,
             usb_device,
-            tuner: R82xx::new(
+            tuner: tuner::RadioTuner::R82(R82xx::new(
                 TunerType::R820T,
                 tuner::R820T_I2C_ADDR,
                 DEF_RTL_XTAL_FREQ,
                 false,
-            ),
+            )),
             center_freq: 0,
             sample_rate: 0,
             rtl_xtal_freq: DEF_RTL_XTAL_FREQ,
@@ -358,36 +363,43 @@ impl RtlSdr {
         self.dev.set_i2c_repeater(true)?;
 
         // Detect and initialize tuner
-        let (tuner_type, i2c_addr) = self.search_tuner()?;
-
+        let found = self.search_tuner()?;
         let is_blog_v4 = matches!(self.board_variant, BoardVariant::RtlSdrBlogV4);
-        // Determine tuner crystal frequency
-        let tuner_xtal = if tuner_type == TunerType::R828D && !is_blog_v4 {
-            tuner::XTAL_FREQ_16
-        } else {
-            DEF_RTL_XTAL_FREQ
+        let tuner_label = match found {
+            FoundTuner::R82 { kind, addr } => {
+                let tuner_xtal = if kind == TunerType::R828D && !is_blog_v4 {
+                    tuner::XTAL_FREQ_16
+                } else {
+                    DEF_RTL_XTAL_FREQ
+                };
+                self.tuner_xtal_freq = tuner_xtal;
+                self.tuner = tuner::RadioTuner::R82(R82xx::new(kind, addr, tuner_xtal, is_blog_v4));
+                kind
+            }
+            FoundTuner::E4k => {
+                self.tuner_xtal_freq = DEF_RTL_XTAL_FREQ;
+                self.tuner = tuner::RadioTuner::E4k(crate::e4k::E4k::new(DEF_RTL_XTAL_FREQ));
+                TunerType::E4000
+            }
         };
-        self.tuner_xtal_freq = tuner_xtal;
-
-        // Create and initialize the tuner driver
-        self.tuner = R82xx::new(tuner_type, i2c_addr, tuner_xtal, is_blog_v4);
         self.tuner.init(&self.dev)?;
 
         // Disable I2C repeater
         self.dev.set_i2c_repeater(false)?;
 
-        // Configure demodulator for SDR mode
-        // Disable Zero-IF mode
-        self.dev.demod_write_reg(1, 0xb1, 0x1a, 1)?;
-
-        // Enable in-phase ADC only
-        self.dev.demod_write_reg(0, 0x08, 0x4d, 1)?;
-
-        // Set IF frequency
-        self.set_if_freq(self.tuner.if_freq())?;
-
-        // Enable spectrum inversion
-        self.dev.demod_write_reg(1, 0x15, 0x01, 1)?;
+        if tuner_label == TunerType::E4000 {
+            // E4000 is zero-IF. Leave both the I and Q paths usable.
+            self.dev.demod_write_reg(1, 0xb1, 0x1b, 1)?;
+            self.dev.demod_write_reg(0, 0x08, 0x4d, 1)?;
+            self.set_if_freq(0)?;
+            self.dev.demod_write_reg(1, 0x15, 0x00, 1)?;
+        } else {
+            // R82xx uses a few-MHz IF and the in-phase ADC.
+            self.dev.demod_write_reg(1, 0xb1, 0x1a, 1)?;
+            self.dev.demod_write_reg(0, 0x08, 0x4d, 1)?;
+            self.set_if_freq(self.tuner.if_freq())?;
+            self.dev.demod_write_reg(1, 0x15, 0x01, 1)?;
+        }
 
         // Read EEPROM for device flags
         match self.dev.read_eeprom() {
@@ -408,7 +420,7 @@ impl RtlSdr {
 
         info!(
             "RTL-SDR initialized: tuner={:?}, variant={:?}, xtal={}Hz",
-            tuner_type, self.board_variant, tuner_xtal,
+            tuner_label, self.board_variant, self.tuner_xtal_freq,
         );
 
         Ok(())
@@ -515,14 +527,17 @@ impl RtlSdr {
     ///
     /// Probes known I2C addresses (R820T at 0x34, R828D at 0x74) by reading
     /// register 0x00. A return value of 0x69 identifies the R82xx silicon.
-    fn search_tuner(&self) -> Result<(TunerType, u8)> {
+    fn search_tuner(&self) -> Result<FoundTuner> {
         for &(tuner_type, addr) in KNOWN_TUNERS {
             match self.dev.i2c_read_reg(addr, 0x00) {
                 Ok(val) => {
                     debug!("I2C probe addr=0x{:02x}: got 0x{:02x}", addr, val);
                     if val == 0x69 {
                         info!("found tuner {:?} at I2C address 0x{:02x}", tuner_type, addr);
-                        return Ok((tuner_type, addr));
+                        return Ok(FoundTuner::R82 {
+                            kind: tuner_type,
+                            addr,
+                        });
                     }
                 }
                 Err(e) => {
@@ -531,9 +546,10 @@ impl RtlSdr {
             }
         }
 
-        // Public identification: Elonics E4000 answers 0x40 at register 0x02.
+        // Elonics E4000 answers 0x40 at register 0x02, address 0xc8.
         if let Ok(0x40) = self.dev.i2c_read_reg(0xc8, 0x02) {
-            return Err(Error::E4000Unsupported);
+            info!("found tuner E4000 at I2C address 0xc8");
+            return Ok(FoundTuner::E4k);
         }
 
         Err(Error::TunerNotFound)
@@ -1033,7 +1049,7 @@ impl AsyncReadControlHandle {
 #[allow(clippy::too_many_arguments)]
 fn streaming_thread(
     dev: Device,
-    mut tuner: R82xx,
+    mut tuner: tuner::RadioTuner,
     rtl_xtal_freq: u32,
     tx: mpsc::SyncSender<Result<Vec<u8>>>,
     stop: Arc<AtomicBool>,

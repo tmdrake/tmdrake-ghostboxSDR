@@ -32,6 +32,7 @@
 //! # Ok::<(), rs_rtl::Error>(())
 //! ```
 pub mod device;
+mod e4k;
 pub mod error;
 pub mod rtlsdr;
 pub mod tuner;

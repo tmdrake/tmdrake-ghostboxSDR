@@ -115,9 +115,16 @@ impl RtlSource {
         let tuner = match sdr.tuner_type() {
             TunerType::R820T => "R820T",
             TunerType::R828D => "R828D",
+            TunerType::E4000 => "E4000",
         };
         let hf_ok = matches!(sdr.board_variant(), BoardVariant::RtlSdrBlogV4);
-        let min_hz = if hf_ok { V4_MIN_HZ } else { GENERIC_MIN_HZ };
+        let min_hz = if hf_ok {
+            V4_MIN_HZ
+        } else if sdr.tuner_type() == TunerType::E4000 {
+            52_000_000
+        } else {
+            GENERIC_MIN_HZ
+        };
         let product = desc
             .as_ref()
             .and_then(|d| d.product.clone())
