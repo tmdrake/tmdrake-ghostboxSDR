@@ -83,13 +83,13 @@ See [packaging/windows/README.md](packaging/windows/README.md) and [docs/zadig.m
 
 Needs Rust (`rustup`) and, on Windows, the MSVC build tools (for `eframe` / `wgpu`).
 
-On Windows, double-click `run.bat` (or pass the same flags the binary takes):
+On Windows, double-click `run.cmd` (or `run.bat`, which calls it). That starts the window directly. Flags still pass through:
 
 ```bat
-run.bat
-run.bat --synth
-run.bat --setup-driver
-run.bat --list
+run.cmd
+run.cmd --synth
+run.cmd --setup-driver
+run.cmd --list
 ```
 
 ```powershell
@@ -140,7 +140,7 @@ flowchart LR
 
 | Path | What |
 |---|---|
-| `run.bat` | Windows launcher (`cargo run --release`, flags pass through) |
+| `run.cmd` | Windows launcher (opens the release window; `run.bat` calls it) |
 | `crates/shackhack` | SLS HUD, NV waterfall, gain slider, audio out |
 | `crates/shackhack/assets/` | Window icon (phosphor stick figure) |
 | `crates/shackhack-sdr` | RTL open/hop/gain, synth IQ, radio thread |
