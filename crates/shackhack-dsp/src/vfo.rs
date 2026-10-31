@@ -1,7 +1,7 @@
 use crate::iq::ComplexSample;
 use crate::AUDIO_RATE;
 
-pub const VFO_COUNT: usize = 4;
+pub const VFO_COUNT: usize = 8;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DemodKind {
@@ -26,6 +26,8 @@ pub struct Vfo {
     pub freq_hz: f64,
     pub mix: f32,
     pub demod: DemodKind,
+    /// Held on a click. The sweeper does not move a parked VFO.
+    pub parked: bool,
     nco_phase: f64,
     iir_i: f32,
     iir_q: f32,
@@ -50,6 +52,7 @@ impl Vfo {
             freq_hz: 98_500_000.0,
             mix,
             demod: DemodKind::Wfm,
+            parked: false,
             nco_phase: 0.0,
             iir_i: 0.0,
             iir_q: 0.0,

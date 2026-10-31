@@ -13,8 +13,20 @@ pub const ALERT: Color32 = Color32::from_rgb(255, 56, 56);
 pub const CYAN: Color32 = Color32::from_rgb(0, 220, 255);
 pub const MAGENTA: Color32 = Color32::from_rgb(255, 64, 180);
 
-/// Overlay colors for the four contacts (A–D).
-pub const CONTACT: [Color32; 4] = [PHOSPHOR, CYAN, MAGENTA, AMBER];
+/// Overlay colors for the analyzer VFOs.
+pub fn vfo_color(index: usize) -> Color32 {
+    const COLORS: [Color32; 8] = [
+        PHOSPHOR,
+        CYAN,
+        MAGENTA,
+        AMBER,
+        Color32::from_rgb(140, 255, 170),
+        Color32::from_rgb(255, 130, 70),
+        Color32::from_rgb(170, 140, 255),
+        Color32::from_rgb(255, 230, 140),
+    ];
+    COLORS[index % COLORS.len()]
+}
 
 fn stroke(width: f32, color: Color32) -> Stroke {
     Stroke::new(width, color)
@@ -101,28 +113,6 @@ pub fn scanlines(painter: &egui::Painter, rect: Rect) {
     while y < rect.bottom() {
         painter.hline(rect.x_range(), y, stroke(1.0, line));
         y += 3.0;
-    }
-}
-
-/// Stick figure drawn at the top of a contact marker.
-pub fn sls_figure(painter: &egui::Painter, x: f32, top: f32, color: Color32, scale: f32) {
-    let s = scale;
-    let head = Pos2::new(x, top + 7.0 * s);
-    painter.circle_stroke(head, 4.0 * s, stroke(1.4, color));
-    let neck = Pos2::new(x, top + 12.0 * s);
-    let hip = Pos2::new(x, top + 26.0 * s);
-    let l_arm = Pos2::new(x - 9.0 * s, top + 18.0 * s);
-    let r_arm = Pos2::new(x + 9.0 * s, top + 18.0 * s);
-    let l_leg = Pos2::new(x - 7.0 * s, top + 36.0 * s);
-    let r_leg = Pos2::new(x + 7.0 * s, top + 36.0 * s);
-    let st = stroke(1.5, color);
-    painter.line_segment([neck, hip], st);
-    painter.line_segment([Pos2::new(x, top + 16.0 * s), l_arm], st);
-    painter.line_segment([Pos2::new(x, top + 16.0 * s), r_arm], st);
-    painter.line_segment([hip, l_leg], st);
-    painter.line_segment([hip, r_leg], st);
-    for p in [neck, l_arm, r_arm, hip, l_leg, r_leg] {
-        painter.circle_filled(p, 1.6 * s, color);
     }
 }
 

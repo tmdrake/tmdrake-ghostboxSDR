@@ -2,7 +2,7 @@
 
 **SDR SPIRIT BOX** — RTL-SDR analog ghost box with a night-vision HUD.
 
-Fast software-VFO scan across a band, always-on audio (no squelch), phosphor waterfall, and four glowing **contacts** (ENT A–D) inside the live 2.4 MHz window.
+Fast software-VFO scan across a band, always-on audio (no squelch), a spectrum analyzer, and eight VFOs walking the live 2.4 MHz window.
 
 Built for a **cheap USB RTL-SDR** (RTL2832U + R820T/R820T2). No upconverter, no GNU Radio, no Airspy.
 
@@ -86,10 +86,10 @@ See [packaging/windows/README.md](packaging/windows/README.md) and [docs/zadig.m
 
 Needs Rust (`rustup`) and, on Windows, the MSVC build tools (for `eframe` / `wgpu`).
 
-On Windows, double-click **`ShackHack.vbs`**. That starts the window directly. `run.cmd` is the same launcher from a prompt. If Command Prompt is set up to open PowerShell first (`AutoRun`), a plain double-click of `run.cmd` never reaches the script.
+On Windows, double-click **`Start.vbs`** in this folder. That opens the window. `run.cmd` is the same launcher from a prompt. If Command Prompt is set up to open PowerShell first (`AutoRun`), a plain double-click of `run.cmd` never reaches the script.
 
 ```bat
-ShackHack.vbs
+Start.vbs
 run.cmd
 run.cmd --synth
 run.cmd --setup-driver
@@ -115,8 +115,8 @@ cargo run --release -p shackhack -- --synth
 - **Dwell / Step** — shack-hack speed
 - **Gain** — RF gain in dB
 - **SIG** — audio-RMS LED bar (green → amber → red)
-- Click the sweep field while sweeping to **park ENT B** on a signal and mix it in
-- HOLD the sweep, then click to tune **ENT A**
+- Click the spectrum while sweeping to **park VFO 2**
+- HOLD the sweep, then click to tune **VFO 1**
 
 ## Analog voice presets (US)
 
@@ -144,7 +144,7 @@ flowchart LR
 
 | Path | What |
 |---|---|
-| `ShackHack.vbs` | Double-click launcher (skips cmd AutoRun) |
+| `Start.vbs` | Double-click this to open the radio |
 | `run.cmd` | Windows launcher from a prompt (`run.bat` calls it) |
 | `crates/shackhack` | Ghost-box HUD, NV waterfall, gain slider, audio out |
 | `crates/shackhack/assets/` | Window icon (phosphor stick figure) |

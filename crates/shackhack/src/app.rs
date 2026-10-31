@@ -1,5 +1,5 @@
 use crate::audio::AudioOut;
-use crate::theme::{self, CONTACT, PHOSPHOR, PHOSPHOR_DIM, PHOSPHOR_HOT, SCOPE, VOID};
+use crate::theme::{self, PHOSPHOR, PHOSPHOR_DIM, PHOSPHOR_HOT, SCOPE, VOID};
 use eframe::egui::{
     self, Align, Color32, FontId, PointerButton, Pos2, Rect, RichText, Sense, Stroke, Ui, Vec2,
 };
@@ -161,7 +161,8 @@ impl eframe::App for ShackHackApp {
             });
             self.band_overview(ui, &snap);
             ui.add_space(4.0);
-            let spec_h = 110.0;
+            let avail = ui.available_height().max(280.0);
+            let spec_h = (avail * 0.68).max(240.0);
             let spec_rect = ui
                 .allocate_exact_size(
                     Vec2::new(ui.available_width(), spec_h),
@@ -170,7 +171,7 @@ impl eframe::App for ShackHackApp {
                 .0;
             self.paint_spectrum(ui, spec_rect, &snap);
             ui.add_space(4.0);
-            let wf_h = ui.available_height().max(160.0);
+            let wf_h = ui.available_height().max(120.0);
             let wf_rect = ui
                 .allocate_exact_size(
                     Vec2::new(ui.available_width(), wf_h),
@@ -321,19 +322,19 @@ impl ShackHackApp {
     }
 
     fn bottom_bar(&mut self, ui: &mut Ui, snap: &shackhack_sdr::Snapshot) {
-        ui.horizontal(|ui| {
-            ui.label(RichText::new("CONTACTS").monospace().color(PHOSPHOR_DIM));
+        ui.horizontal_wrapped(|ui| {
+            ui.spacing_mut().slider_width = 52.0;
+            ui.label(RichText::new("VFOS").monospace().color(PHOSPHOR_DIM));
             for i in 0..VFO_COUNT {
                 let v = &snap.vfos[i];
-                let name = ['A', 'B', 'C', 'D'][i];
                 ui.separator();
                 let mut on = v.enabled;
                 if ui
                     .checkbox(
                         &mut on,
-                        RichText::new(format!("ENT {name}"))
+                        RichText::new(format!("V{}", i + 1))
                             .monospace()
-                            .color(CONTACT[i]),
+                            .color(theme::vfo_color(i)),
                     )
                     .changed()
                 {
@@ -370,12 +371,10 @@ impl ShackHackApp {
             }
             ui.with_layout(egui::Layout::right_to_left(Align::Center), |ui| {
                 ui.label(
-                    RichText::new(
-                        "click sweep field to park ENT B  ·  receive only  ·  analog ghost box",
-                    )
-                    .monospace()
-                    .size(11.0)
-                    .color(PHOSPHOR_DIM),
+                    RichText::new("click the spectrum to park VFO 2  ·  V1 leads the scan")
+                        .monospace()
+                        .size(11.0)
+                        .color(PHOSPHOR_DIM),
                 );
             });
         });
@@ -451,22 +450,62 @@ impl ShackHackApp {
     fn paint_spectrum(&self, ui: &mut Ui, rect: Rect, snap: &shackhack_sdr::Snapshot) {
         let painter = ui.painter_at(rect);
         painter.rect_filled(rect, 0.0, SCOPE);
-        theme::scanlines(&painter, rect);
+        let plot = Rect::from_min_max(
+            Pos2::new(rect.left() + 46.0, rect.top() + 18.0),
+            Pos2::new(rect.right() - 8.0, rect.bottom() - 20.0),
+        );
+        let floor = snap.floor_db - 8.0;
+        let ceil = snap.peak_db.max(floor + 20.0);
+        let grid = Color32::from_rgb(0, 70, 32);
+        for i in 0..=4 {
+            let t = i as f32 / 4.0;
+            let y = plot.bottom() - t * plot.height();
+            painter.hline(plot.x_range(), y, Stroke::new(1.0_f32, grid));
+            let db = floor + (ceil - floor) * t;
+            painter.text(
+                Pos2::new(rect.left() + 4.0, y),
+                egui::Align2::LEFT_CENTER,
+                format!("{db:.0}"),
+                FontId::monospace(10.0),
+                PHOSPHOR_DIM,
+            );
+        }
+        let start_hz = snap.lo_hz - snap.sample_rate * 0.5;
+        for i in 0..=6 {
+            let hz = start_hz + snap.sample_rate * i as f64 / 6.0;
+            let x = hz_to_x(hz, plot, snap);
+            painter.vline(x, plot.y_range(), Stroke::new(1.0_f32, grid));
+            painter.text(
+                Pos2::new(x, rect.bottom() - 2.0),
+                egui::Align2::CENTER_BOTTOM,
+                format!("{:.2}", hz / 1e6),
+                FontId::monospace(10.0),
+                PHOSPHOR_DIM,
+            );
+        }
         if snap.spectrum.len() >= 8 {
-            let floor = snap.floor_db - 8.0;
-            let ceil = snap.peak_db.max(floor + 20.0);
             let n = snap.spectrum.len();
             let mut pts = Vec::with_capacity(n);
             for (i, db) in snap.spectrum.iter().enumerate() {
-                let x = rect.left() + i as f32 / (n - 1) as f32 * rect.width();
+                let x = plot.left() + i as f32 / (n - 1) as f32 * plot.width();
                 let t = ((*db - floor) / (ceil - floor)).clamp(0.0, 1.0);
-                let y = rect.bottom() - t * rect.height();
+                let y = plot.bottom() - t * plot.height();
                 pts.push(Pos2::new(x, y));
             }
-            painter.add(egui::Shape::line(pts, Stroke::new(1.4_f32, PHOSPHOR)));
-            self.overlay_vfos(&painter, rect, snap, true);
+            if pts.len() >= 2 {
+                let mut fill = pts.clone();
+                fill.push(Pos2::new(plot.right(), plot.bottom()));
+                fill.push(Pos2::new(plot.left(), plot.bottom()));
+                painter.add(egui::Shape::convex_polygon(
+                    fill,
+                    Color32::from_rgba_unmultiplied(0, 255, 106, 28),
+                    Stroke::NONE,
+                ));
+            }
+            painter.add(egui::Shape::line(pts, Stroke::new(1.6_f32, PHOSPHOR)));
+            self.overlay_vfos(&painter, plot, snap, true);
         }
-        theme::hud_frame(&painter, rect, "SWEEP FIELD");
+        theme::hud_frame(&painter, rect, "SPECTRUM");
     }
 
     fn paint_waterfall(
@@ -502,7 +541,7 @@ impl ShackHackApp {
         let painter = ui.painter_at(rect);
         theme::scanlines(&painter, rect);
         self.overlay_vfos(&painter, rect, snap, false);
-        theme::hud_frame(&painter, rect, "NV WATERFALL");
+        theme::hud_frame(&painter, rect, "WATERFALL");
 
         if ui.input(|i| i.pointer.button_released(PointerButton::Primary)) {
             if let Some(pos) = ui.input(|i| i.pointer.interact_pos()) {
@@ -538,23 +577,30 @@ impl ShackHackApp {
             let bw = v.demod.passband_hz();
             let x0 = hz_to_x(hz - bw * 0.5, rect, snap);
             let x1 = hz_to_x(hz + bw * 0.5, rect, snap);
-            let color = CONTACT[i];
+            let color = theme::vfo_color(i);
             if fill {
                 painter.rect_filled(
                     Rect::from_min_max(Pos2::new(x0, rect.top()), Pos2::new(x1, rect.bottom())),
                     0.0,
-                    Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), 28),
+                    Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), 36),
                 );
             }
             painter.vline(x, rect.y_range(), Stroke::new(1.5_f32, color));
-            let scale = if fill { 0.85 } else { 0.65 };
-            theme::sls_figure(painter, x, rect.top() + 2.0, color, scale);
-            let name = ['A', 'B', 'C', 'D'][i];
+            let tip = Pos2::new(x, rect.top() + 2.0);
+            painter.add(egui::Shape::convex_polygon(
+                vec![
+                    Pos2::new(x - 5.0, rect.top()),
+                    Pos2::new(x + 5.0, rect.top()),
+                    tip,
+                ],
+                color,
+                Stroke::NONE,
+            ));
             painter.text(
-                Pos2::new(x + 8.0, rect.top() + 4.0),
+                Pos2::new(x + 6.0, rect.top() + 2.0),
                 egui::Align2::LEFT_TOP,
-                format!("ENT {name}"),
-                FontId::monospace(10.0),
+                format!("V{} {:.3}", i + 1, hz / 1e6),
+                FontId::monospace(11.0),
                 color,
             );
         }

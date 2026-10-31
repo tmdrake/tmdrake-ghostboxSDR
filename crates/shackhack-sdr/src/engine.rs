@@ -109,7 +109,7 @@ impl Snapshot {
             peak_db: -40.0,
             clip: false,
             vfos: std::array::from_fn(|i| VfoSnap {
-                enabled: i == 0,
+                enabled: true,
                 freq_hz: 98_500_000.0,
                 display_hz: 98_500_000.0,
                 mix: if i == 0 { 1.0 } else { 0.35 },
@@ -190,7 +190,7 @@ pub fn start(kind: SourceKind) -> RadioHandle {
             let mut sweeper = Sweeper::new(config_from_preset(preset, SweepMode::Bounce), sr);
             sweeper.freq_hz = preset.start_hz + (preset.end_hz - preset.start_hz) / 2;
             let mut vfos: [Vfo; VFO_COUNT] = std::array::from_fn(|i| {
-                let mut v = Vfo::new(i == 0, if i == 0 { 1.0 } else { 0.35 });
+                let mut v = Vfo::new(true, if i == 0 { 1.0 } else { 0.12 });
                 v.configure(sr, DemodKind::Wfm);
                 v.freq_hz = sweeper.freq_hz as f64;
                 v
@@ -240,6 +240,9 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                                     sr,
                                 );
                                 sweeper.freq_hz = start_hz;
+                                for v in &mut vfos {
+                                    v.parked = false;
+                                }
                                 vfos[0].freq_hz = start_hz as f64;
                                 lo = sweeper.needed_lo(sr, tuner_min, tuner_max);
                                 hop_now(&mut source, lo, &mut hop_fade, &mut fade);
@@ -279,11 +282,15 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                                 if let Some(v) = vfos.get_mut(index) {
                                     v.freq_hz = hz as f64;
                                     v.enabled = true;
+                                    v.parked = true;
                                 }
                             }
                             Command::EnableVfo { index, on } => {
                                 if let Some(v) = vfos.get_mut(index) {
                                     v.enabled = on;
+                                    if on {
+                                        v.parked = false;
+                                    }
                                 }
                             }
                             Command::SetMix { index, mix } => {
@@ -336,6 +343,13 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                             hop_now(&mut source, lo, &mut hop_fade, &mut fade);
                         }
                     }
+                    place_scan_comb(
+                        &mut vfos,
+                        sweeper.freq_hz as f64,
+                        sweeper.cfg.step_hz as f64,
+                        sweeper.cfg.min_hz as f64,
+                        sweeper.cfg.max_hz as f64,
+                    );
                 }
 
                 let vol = if mute { 0.0 } else { volume };
@@ -409,6 +423,30 @@ pub fn start(kind: SourceKind) -> RadioHandle {
         snapshot,
         audio,
         cmd: cmd_tx,
+    }
+}
+
+fn place_scan_comb(vfos: &mut [Vfo], center: f64, step: f64, min: f64, max: f64) {
+    let step = step.max(1.0);
+    let span = (max - min).max(step);
+    let n = vfos.len() as f64;
+    for (i, v) in vfos.iter_mut().enumerate() {
+        if i == 0 || v.parked {
+            continue;
+        }
+        let offset = (i as f64 - (n - 1.0) / 2.0) * step;
+        let mut hz = center + offset;
+        let mut guard = 0;
+        while hz < min && guard < 8 {
+            hz += span;
+            guard += 1;
+        }
+        guard = 0;
+        while hz >= max && guard < 8 {
+            hz -= span;
+            guard += 1;
+        }
+        v.freq_hz = hz;
     }
 }
 
