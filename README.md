@@ -10,7 +10,7 @@ Built for a **cheap USB RTL-SDR** (RTL2832U + R820T/R820T2). No upconverter, no 
 [![license](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 <p align="center">
-  <img src="docs/diagrams/logo.jpg" alt="Purple dragon logo" width="160">
+  <img src="docs/diagrams/icon.png" alt="Drake's Box SDR stick-figure icon" width="128">
 </p>
 <p align="center">
   <img src="docs/diagrams/cheap-rtl-sdr.jpg" alt="Cheap generic USB RTL-SDR dongle with a whip antenna" width="880">
@@ -25,7 +25,7 @@ Default shack-hack: FM broadcast **88–108 MHz**, **WFM**, **150 kHz** steps, *
 
 ## Look
 
-Night-vision phosphor HUD for a shack-hack ghost box: spectrum analyzer, eight scanning VFOs, waterfall, blinking **SWEEP LIVE**, and an 8-cell **SIG** bar driven by audio RMS. The purple dragon is the logo only.
+Night-vision phosphor HUD for a shack-hack ghost box: dark viewfinder, glowing stick-figure **contacts** on the sweep field, NV waterfall, blinking **SWEEP LIVE**, and an 8-cell **SIG** bar driven by audio RMS.
 
 ## Diagram — cheap RTL-SDR to speakers
 
@@ -146,7 +146,8 @@ flowchart LR
 |---|---|
 | `Start.vbs` | Double-click this to open the radio |
 | `run.cmd` | Windows launcher from a prompt (`run.bat` calls it) |
-| `crates/shackhack` | Ghost-box HUD, spectrum, gain slider, audio out |
+| `crates/shackhack` | Ghost-box HUD, NV waterfall, gain slider, audio out |
+| `crates/shackhack/assets/` | Window icon (phosphor stick figure) |
 | `crates/shackhack-sdr` | RTL open/hop/gain, synth IQ, radio thread |
 | `crates/shackhack-dsp` | FFT, sweeper, AM/NFM/WFM VFOs |
 | `crates/shackhack-bands` | Band table and tuner floors |
