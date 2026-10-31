@@ -83,6 +83,15 @@ See [packaging/windows/README.md](packaging/windows/README.md) and [docs/zadig.m
 
 Needs Rust (`rustup`) and, on Windows, the MSVC build tools (for `eframe` / `wgpu`).
 
+On Windows, double-click `run.bat` (or pass the same flags the binary takes):
+
+```bat
+run.bat
+run.bat --synth
+run.bat --setup-driver
+run.bat --list
+```
+
 ```powershell
 cargo run --release -p shackhack -- --setup-driver   # once, if the stick is new
 cargo run --release -p shackhack
@@ -131,6 +140,7 @@ flowchart LR
 
 | Path | What |
 |---|---|
+| `run.bat` | Windows launcher (`cargo run --release`, flags pass through) |
 | `crates/shackhack` | SLS HUD, NV waterfall, gain slider, audio out |
 | `crates/shackhack/assets/` | Window icon (phosphor stick figure) |
 | `crates/shackhack-sdr` | RTL open/hop/gain, synth IQ, radio thread |
