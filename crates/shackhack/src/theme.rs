@@ -1,4 +1,4 @@
-//! SLS-camera ghost-hunter look: phosphor green HUD on black.
+//! Phosphor ghost-box HUD: night-vision green on black.
 
 use eframe::egui::{self, Color32, CornerRadius, FontId, Pos2, Rect, Stroke, Ui, Vec2};
 
@@ -13,7 +13,7 @@ pub const ALERT: Color32 = Color32::from_rgb(255, 56, 56);
 pub const CYAN: Color32 = Color32::from_rgb(0, 220, 255);
 pub const MAGENTA: Color32 = Color32::from_rgb(255, 64, 180);
 
-/// SLS overlay colors for the four contacts (A–D).
+/// Overlay colors for the four contacts (A–D).
 pub const CONTACT: [Color32; 4] = [PHOSPHOR, CYAN, MAGENTA, AMBER];
 
 fn stroke(width: f32, color: Color32) -> Stroke {
@@ -104,7 +104,7 @@ pub fn scanlines(painter: &egui::Painter, rect: Rect) {
     }
 }
 
-/// Kinect-style SLS stick figure at the top of a contact marker.
+/// Stick figure drawn at the top of a contact marker.
 pub fn sls_figure(painter: &egui::Painter, x: f32, top: f32, color: Color32, scale: f32) {
     let s = scale;
     let head = Pos2::new(x, top + 7.0 * s);

@@ -137,7 +137,7 @@ impl eframe::App for ShackHackApp {
             }
             ui.horizontal(|ui| {
                 ui.label(
-                    RichText::new("SLS SPIRIT BOX")
+                    RichText::new("SDR SPIRIT BOX")
                         .monospace()
                         .size(11.0)
                         .color(PHOSPHOR_DIM),
@@ -187,14 +187,14 @@ impl ShackHackApp {
         ui.add_space(4.0);
         ui.horizontal(|ui| {
             ui.label(
-                RichText::new("SHACKHACK")
+                RichText::new("DRAKE'S BOX SDR")
                     .strong()
                     .size(18.0)
                     .color(PHOSPHOR)
                     .monospace(),
             );
             ui.label(
-                RichText::new("SLS")
+                RichText::new("GHOST BOX")
                     .monospace()
                     .size(12.0)
                     .color(PHOSPHOR_DIM),

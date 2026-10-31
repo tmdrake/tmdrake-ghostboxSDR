@@ -1,6 +1,6 @@
-# ShackHack
+# Drake's Box SDR
 
-**SLS SPIRIT BOX** — RTL-SDR analog ghost box with a night-vision investigator HUD.
+**SDR SPIRIT BOX** — RTL-SDR analog ghost box with a night-vision HUD.
 
 Fast software-VFO scan across a band, always-on audio (no squelch), phosphor waterfall, and four glowing **contacts** (ENT A–D) inside the live 2.4 MHz window.
 
@@ -10,7 +10,7 @@ Built for a **cheap USB RTL-SDR** (RTL2832U + R820T/R820T2). No upconverter, no 
 [![license](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 <p align="center">
-  <img src="docs/diagrams/icon.png" alt="ShackHack SLS stick-figure icon" width="128">
+  <img src="docs/diagrams/icon.png" alt="Drake's Box SDR stick-figure icon" width="128">
 </p>
 <p align="center">
   <img src="docs/diagrams/cheap-rtl-sdr.jpg" alt="Cheap generic USB RTL-SDR dongle with a whip antenna" width="880">
@@ -25,7 +25,7 @@ Default shack-hack: FM broadcast **88–108 MHz**, **WFM**, **150 kHz** steps, *
 
 ## Look
 
-Night-vision phosphor HUD in the spirit of an SLS camera kit: dark viewfinder, glowing stick-figure **contacts** on the sweep field, NV waterfall, blinking **SWEEP LIVE**, and an 8-cell **SIG** bar driven by audio RMS. Original ShackHack branding.
+Night-vision phosphor HUD for a shack-hack ghost box: dark viewfinder, glowing stick-figure **contacts** on the sweep field, NV waterfall, blinking **SWEEP LIVE**, and an 8-cell **SIG** bar driven by audio RMS.
 
 ## Diagram — cheap RTL-SDR to speakers
 
@@ -146,7 +146,7 @@ flowchart LR
 |---|---|
 | `ShackHack.vbs` | Double-click launcher (skips cmd AutoRun) |
 | `run.cmd` | Windows launcher from a prompt (`run.bat` calls it) |
-| `crates/shackhack` | SLS HUD, NV waterfall, gain slider, audio out |
+| `crates/shackhack` | Ghost-box HUD, NV waterfall, gain slider, audio out |
 | `crates/shackhack/assets/` | Window icon (phosphor stick figure) |
 | `crates/shackhack-sdr` | RTL open/hop/gain, synth IQ, radio thread |
 | `crates/shackhack-dsp` | FFT, sweeper, AM/NFM/WFM VFOs |

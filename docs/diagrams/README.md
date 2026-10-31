@@ -4,7 +4,7 @@ Assets used by the root [README](../../README.md).
 
 | File | What |
 |---|---|
-| [icon.png](icon.png) | App icon — phosphor SLS stick figure + cheap dongle |
+| [icon.png](icon.png) | App icon — phosphor stick figure + cheap dongle |
 | [cheap-rtl-sdr.jpg](cheap-rtl-sdr.jpg) | Cheap generic USB RTL-SDR with a whip |
 | [signal-path.svg](signal-path.svg) | Antenna → dongle → WinUSB → parked LO → contacts → audio / NV waterfall |
 | [lo-window.svg](lo-window.svg) | 2.4 MHz capture, 10% edge crop, software VFO walk, PLL hop at the edge |

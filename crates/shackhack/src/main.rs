@@ -35,7 +35,7 @@ fn main() -> anyhow::Result<()> {
     let mut viewport = egui::ViewportBuilder::default()
         .with_inner_size([1280.0, 800.0])
         .with_min_inner_size([960.0, 600.0])
-        .with_title("SHACKHACK — SLS SPIRIT BOX")
+        .with_title("Drake's Box SDR — SDR SPIRIT BOX")
         .with_active(true);
     if let Ok(icon) = eframe::icon_data::from_png_bytes(include_bytes!("../assets/icon.png")) {
         viewport = viewport.with_icon(icon);
@@ -47,7 +47,7 @@ fn main() -> anyhow::Result<()> {
     };
 
     eframe::run_native(
-        "ShackHack",
+        "Drake's Box SDR",
         options,
         Box::new(move |cc| Ok(Box::new(app::ShackHackApp::new(cc, kind)))),
     )
@@ -58,8 +58,8 @@ fn main() -> anyhow::Result<()> {
 fn print_help() {
     println!(
         "\
-SHACKHACK — SLS SPIRIT BOX
-RTL-SDR analog ghost box with a night-vision investigator HUD
+Drake's Box SDR — SDR SPIRIT BOX
+RTL-SDR analog ghost box with a night-vision HUD
 
   shackhack                 open the radio (needs WinUSB on the dongle)
   shackhack --synth         fake IQ, no dongle

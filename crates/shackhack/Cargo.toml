@@ -3,7 +3,7 @@ name = "shackhack"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "ShackHack — SLS spirit-box SDR: analog ghost box with night-vision HUD"
+description = "Drake's Box SDR — analog ghost box with a night-vision HUD"
 default-run = "shackhack"
 
 [[bin]]

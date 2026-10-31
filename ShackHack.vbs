@@ -17,7 +17,7 @@ Next
 If Not fso.FileExists(exe) Then
   rc = sh.Run("cmd.exe /d /c """ & cmd & """" & extra, 1, True)
   If rc <> 0 Then
-    MsgBox "ShackHack did not build.", 16, "SHACKHACK"
+    MsgBox "Drake's Box SDR did not build.", 16, "Drake's Box SDR"
     WScript.Quit rc
   End If
 End If
@@ -26,5 +26,5 @@ If fso.FileExists(exe) Then
   sh.CurrentDirectory = root
   sh.Run """" & exe & """" & extra, 1, False
 Else
-  MsgBox "shackhack.exe is still missing.", 16, "SHACKHACK"
+  MsgBox "shackhack.exe is still missing.", 16, "Drake's Box SDR"
 End If

@@ -18,7 +18,7 @@ rem Drop the trailing slash so start does not treat \" as an escaped quote.
 set "ROOT=%~dp0"
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
-echo Opening SHACKHACK window...
+echo Opening Drake's Box SDR...
 rem First quoted arg is the console title, not the program.
 start "SHACKHACK" /D "%ROOT%" "%EXE%" %*
 if errorlevel 1 goto fail
@@ -45,6 +45,6 @@ goto fail
 
 :fail
 echo.
-echo ShackHack did not start.
+echo Drake's Box SDR did not start.
 pause
 exit /b 1
