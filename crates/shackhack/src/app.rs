@@ -27,6 +27,7 @@ pub struct ShackHackApp {
     custom_min_mhz: f64,
     custom_max_mhz: f64,
     gain_db: f32,
+    driver_note: Option<String>,
 }
 
 impl ShackHackApp {
@@ -46,6 +47,7 @@ impl ShackHackApp {
             custom_min_mhz: 88.0,
             custom_max_mhz: 108.0,
             gain_db: 29.6,
+            driver_note: None,
         }
     }
 }
@@ -75,25 +77,62 @@ impl eframe::App for ShackHackApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             if let Some(err) = &snap.error {
                 ui.colored_label(Color32::from_rgb(255, 120, 80), err);
-                ui.label("Windows: run Zadig as admin → Options → List All Devices → Bulk-In Interface 0 → WinUSB.");
+                ui.label(
+                    "No kernel driver to compile. Bind Microsoft WinUSB to Bulk-In Interface 0.",
+                );
+                #[cfg(windows)]
+                {
+                    if ui.button("Install WinUSB package…").clicked() {
+                        match crate::winusb::start_installer() {
+                            Ok(p) => {
+                                self.driver_note = Some(format!(
+                                    "Launched {} — pick Interface 0, WinUSB.",
+                                    p.display()
+                                ));
+                            }
+                            Err(e) => self.driver_note = Some(e.to_string()),
+                        }
+                    }
+                    ui.label("or: shackhack --setup-driver");
+                }
+                if let Some(note) = &self.driver_note {
+                    ui.label(RichText::new(note).weak());
+                }
                 ui.separator();
             }
-            ui.label(RichText::new(format!(
-                "{}   {} – {:.1}–{:.0} MHz   LO {:.3} MHz",
-                snap.device_label,
-                if snap.hf_ok { "HF ok" } else { "tuner ≥ 24 MHz" },
-                snap.tuner_min_hz as f64 / 1e6,
-                snap.tuner_max_hz as f64 / 1e6,
-                snap.lo_hz / 1e6
-            )).weak());
+            ui.label(
+                RichText::new(format!(
+                    "{}   {} – {:.1}–{:.0} MHz   LO {:.3} MHz",
+                    snap.device_label,
+                    if snap.hf_ok {
+                        "HF ok"
+                    } else {
+                        "tuner ≥ 24 MHz"
+                    },
+                    snap.tuner_min_hz as f64 / 1e6,
+                    snap.tuner_max_hz as f64 / 1e6,
+                    snap.lo_hz / 1e6
+                ))
+                .weak(),
+            );
             self.band_overview(ui, &snap);
             ui.add_space(4.0);
             let spec_h = 110.0;
-            let spec_rect = ui.allocate_exact_size(Vec2::new(ui.available_width(), spec_h), Sense::click_and_drag()).0;
+            let spec_rect = ui
+                .allocate_exact_size(
+                    Vec2::new(ui.available_width(), spec_h),
+                    Sense::click_and_drag(),
+                )
+                .0;
             self.paint_spectrum(ui, spec_rect, &snap);
             ui.add_space(4.0);
             let wf_h = ui.available_height().max(160.0);
-            let wf_rect = ui.allocate_exact_size(Vec2::new(ui.available_width(), wf_h), Sense::click_and_drag()).0;
+            let wf_rect = ui
+                .allocate_exact_size(
+                    Vec2::new(ui.available_width(), wf_h),
+                    Sense::click_and_drag(),
+                )
+                .0;
             self.paint_waterfall(ui, wf_rect, &snap, ctx);
         });
     }

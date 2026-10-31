@@ -43,7 +43,7 @@ Typical cheap kit:
 
 1. USB RTL-SDR dongle (RTL2832U + R820T2)
 2. Whip or mag-mount on the SMA
-3. Windows PC with WinUSB on **Bulk-In Interface 0** ([Zadig](docs/zadig.md))
+3. Windows PC with WinUSB on **Bulk-In Interface 0** ([WinUSB package](packaging/windows/README.md))
 
 ## Gain
 
@@ -53,23 +53,29 @@ The R820T has about **0–49.6 dB** of stepped RF gain. ShackHack exposes it as 
 - If the spectrum goes solid yellow/red or you see **OVERLOAD**, drop gain.
 - Tuner AGC is not used on FM broadcast; strong stations will slam the ADC.
 
-## Windows driver (Zadig)
+## Windows driver (WinUSB package)
 
-The stock DVB-T driver claims the stick. User-space SDR needs WinUSB.
+Windows already ships WinUSB. This package binds that inbox driver to **Bulk-In Interface 0** on the cheap RTL-SDR.
 
-1. Plug in the dongle.
-2. Run [Zadig](https://zadig.akeo.ie/) as Administrator.
-3. **Options → List All Devices**.
-4. Select **Bulk-In, Interface (Interface 0)** (not the composite parent).
-5. Target driver: **WinUSB** → Replace Driver.
+```powershell
+powershell -ExecutionPolicy Bypass -File packaging/windows/install-winusb.ps1
+```
 
-See [docs/zadig.md](docs/zadig.md).
+```powershell
+cargo run --release -p shackhack -- --list
+cargo run --release -p shackhack -- --setup-driver
+```
+
+The package finds the dongle, downloads official Zadig (hash-pinned), and launches it elevated. In Zadig: **Bulk-In, Interface (Interface 0)** → **WinUSB** → Replace Driver. Unplug/replug.
+
+See [packaging/windows/README.md](packaging/windows/README.md) and [docs/zadig.md](docs/zadig.md).
 
 ## Build
 
 Needs Rust (`rustup`) and, on Windows, the MSVC build tools (for `eframe` / `wgpu`).
 
 ```powershell
+cargo run --release -p shackhack -- --setup-driver   # once, if the stick is new
 cargo run --release -p shackhack
 ```
 
@@ -120,7 +126,8 @@ flowchart LR
 | `crates/shackhack-dsp` | FFT, sweeper, AM/NFM/WFM VFOs |
 | `crates/shackhack-bands` | Band table and tuner floors |
 | `docs/diagrams/` | RTL-SDR photo + architecture SVGs |
-| `docs/zadig.md` | WinUSB install |
+| `packaging/windows/` | WinUSB bind package (Zadig, no `.sys` to build) |
+| `docs/zadig.md` | Driver notes |
 | `docs/bands.md` | Preset notes |
 
 ## Disclaimer

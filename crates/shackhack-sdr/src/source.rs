@@ -106,7 +106,7 @@ impl RtlSource {
         let descriptors = DeviceDescriptors::new()?;
         if descriptors.is_empty() {
             return Err(SourceError::Message(
-                "No RTL-SDR found. On Windows, install WinUSB with Zadig on Bulk-In Interface 0."
+                "No RTL-SDR found. On Windows, run: shackhack --setup-driver  (WinUSB on Bulk-In Interface 0; no kernel driver to compile)."
                     .into(),
             ));
         }
