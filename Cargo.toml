@@ -1,0 +1,30 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/shackhack",
+    "crates/shackhack-bands",
+    "crates/shackhack-dsp",
+    "crates/shackhack-sdr",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/tmdrake/tmdrake-ghostboxSDR"
+authors = ["Drake Dragon"]
+rust-version = "1.88"
+
+[workspace.dependencies]
+shackhack-bands = { path = "crates/shackhack-bands" }
+shackhack-dsp = { path = "crates/shackhack-dsp" }
+shackhack-sdr = { path = "crates/shackhack-sdr" }
+anyhow = "1"
+crossbeam-channel = "0.5"
+eframe = "0.32"
+egui = "0.32"
+num-complex = "0.4"
+parking_lot = "0.12"
+rustfft = "6"
+thiserror = "2"
+tracing = "0.1"

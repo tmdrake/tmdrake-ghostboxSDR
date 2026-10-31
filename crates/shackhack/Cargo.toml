@@ -1,0 +1,23 @@
+[package]
+name = "shackhack"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "ShackHack — RTL-SDR analog ghost box with waterfall and multi-VFO"
+default-run = "shackhack"
+
+[[bin]]
+name = "shackhack"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+cpal = "0.15"
+eframe.workspace = true
+egui.workspace = true
+parking_lot.workspace = true
+shackhack-bands.workspace = true
+shackhack-dsp.workspace = true
+shackhack-sdr.workspace = true
+tracing.workspace = true
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

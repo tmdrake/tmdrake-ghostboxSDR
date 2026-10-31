@@ -1,0 +1,14 @@
+[package]
+name = "shackhack-sdr"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "RTL-SDR capture, window hops, and radio engine"
+
+[dependencies]
+crossbeam-channel.workspace = true
+parking_lot.workspace = true
+rs-rtl = "0.5"
+shackhack-bands.workspace = true
+shackhack-dsp.workspace = true
+thiserror.workspace = true
