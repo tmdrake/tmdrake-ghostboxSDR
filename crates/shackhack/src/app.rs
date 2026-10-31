@@ -9,6 +9,8 @@ use shackhack_dsp::sweep::Mode;
 use shackhack_dsp::vfo::{DemodKind, VFO_COUNT};
 use shackhack_sdr::{Command, RadioHandle, SourceKind};
 
+use crate::settings::Settings;
+
 pub struct ShackHackApp {
     radio: RadioHandle,
     _audio: Option<AudioOut>,
@@ -21,6 +23,7 @@ pub struct ShackHackApp {
     custom_min_mhz: f64,
     custom_max_mhz: f64,
     gain_db: f32,
+    settings: Settings,
     driver_note: Option<String>,
     driver_events: std::sync::mpsc::Receiver<String>,
 }
@@ -29,6 +32,8 @@ impl ShackHackApp {
     pub fn new(cc: &eframe::CreationContext<'_>, kind: SourceKind) -> Self {
         theme::apply(&cc.egui_ctx);
         let radio = shackhack_sdr::start(kind);
+        let settings = Settings::load();
+        settings.push(&radio);
         let audio = AudioOut::start(radio.audio.clone()).ok();
         Self {
             radio,
@@ -38,10 +43,11 @@ impl ShackHackApp {
             wf_h: 280,
             wf_tex: None,
             overview: vec![-90.0; 1024],
-            preset_id: "fm".into(),
-            custom_min_mhz: 88.0,
-            custom_max_mhz: 108.0,
-            gain_db: 29.6,
+            preset_id: settings.preset_id.clone(),
+            custom_min_mhz: settings.min_mhz,
+            custom_max_mhz: settings.max_mhz,
+            gain_db: settings.gain_db,
+            settings,
             driver_note: None,
             driver_events: spawn_driver_check(kind),
         }
@@ -213,6 +219,8 @@ impl ShackHackApp {
                 ))
                 .clicked()
             {
+                self.settings.scanning = !snap.sweeping;
+                self.settings.save();
                 self.radio.send(Command::SetSweeping(!snap.sweeping));
             }
             ui.separator();
@@ -257,6 +265,8 @@ impl ShackHackApp {
                         | (Mode::Random, SweepMode::Random)
                 );
                 if ui.selectable_label(on, m.as_str()).clicked() {
+                    self.settings.mode = *m;
+                    self.settings.save();
                     self.radio.send(Command::SetMode(*m));
                 }
             }
@@ -271,6 +281,8 @@ impl ShackHackApp {
                 .min_decimals(1);
             let resp = ui.add(slider);
             if resp.changed() {
+                self.settings.gain_db = self.gain_db;
+                self.settings.save();
                 self.radio
                     .send(Command::SetGain((self.gain_db * 10.0).round() as i32));
             } else if !resp.dragged() {
@@ -286,6 +298,8 @@ impl ShackHackApp {
                 .add(egui::Slider::new(&mut dwell, 10.0..=200.0).suffix(" ms"))
                 .changed()
             {
+                self.settings.dwell_ms = dwell as u32;
+                self.settings.save();
                 self.radio.send(Command::SetDwell(dwell as u32));
             }
             ui.label("Step");
@@ -294,6 +308,8 @@ impl ShackHackApp {
                 .add(egui::Slider::new(&mut step, 5.0..=400.0).suffix(" kHz"))
                 .changed()
             {
+                self.settings.step_hz = (step * 1000.0) as u64;
+                self.settings.save();
                 self.radio.send(Command::SetStep((step * 1000.0) as u64));
             }
             ui.separator();
@@ -306,6 +322,8 @@ impl ShackHackApp {
                         | (DemodKind::Am, Demod::Am)
                 );
                 if ui.selectable_label(on, d.as_str()).clicked() {
+                    self.settings.demod = *d;
+                    self.settings.save();
                     self.radio.send(Command::SetDemod(*d));
                 }
             }
@@ -315,10 +333,14 @@ impl ShackHackApp {
             ui.label("Vol");
             let mut vol = snap.volume;
             if ui.add(egui::Slider::new(&mut vol, 0.0..=1.2)).changed() {
+                self.settings.volume = vol;
+                self.settings.save();
                 self.radio.send(Command::SetVolume(vol));
             }
             let mute_l = if snap.mute { "Unmute" } else { "Mute" };
             if ui.button(mute_l).clicked() {
+                self.settings.mute = !snap.mute;
+                self.settings.save();
                 self.radio.send(Command::SetMute(!snap.mute));
             }
         });
@@ -342,6 +364,8 @@ impl ShackHackApp {
                     )
                     .changed()
                 {
+                    self.settings.vfo_on[i] = on;
+                    self.settings.save();
                     self.radio.send(Command::EnableVfo { index: i, on });
                 }
                 ui.monospace(format_hz(if i == 0 { v.display_hz } else { v.freq_hz }));
@@ -354,6 +378,8 @@ impl ShackHackApp {
                         .add(egui::Slider::new(&mut mix, 0.0..=1.0).max_decimals(2))
                         .changed()
                     {
+                        self.settings.vfo_mix[i] = mix;
+                        self.settings.save();
                         self.radio.send(Command::SetMix { index: i, mix });
                     }
                 }
@@ -372,6 +398,10 @@ impl ShackHackApp {
                     max_hz: max,
                 });
                 self.preset_id = "custom".into();
+                self.settings.preset_id = "custom".into();
+                self.settings.min_mhz = self.custom_min_mhz;
+                self.settings.max_mhz = self.custom_max_mhz;
+                self.settings.save();
             }
             ui.with_layout(egui::Layout::right_to_left(Align::Center), |ui| {
                 ui.label(
@@ -388,6 +418,13 @@ impl ShackHackApp {
         self.preset_id = p.id.to_string();
         self.custom_min_mhz = p.start_hz as f64 / 1e6;
         self.custom_max_mhz = p.end_hz as f64 / 1e6;
+        self.settings.preset_id = p.id.to_string();
+        self.settings.min_mhz = self.custom_min_mhz;
+        self.settings.max_mhz = self.custom_max_mhz;
+        self.settings.dwell_ms = p.dwell_ms;
+        self.settings.step_hz = p.step_hz;
+        self.settings.demod = p.demod;
+        self.settings.save();
         self.radio.send(Command::ApplyPreset {
             start_hz: p.start_hz,
             end_hz: p.end_hz,

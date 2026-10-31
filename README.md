@@ -107,6 +107,7 @@ cargo run --release -p shackhack -- --synth
 ## Controls
 
 - **Start scan / Stop scan** — the sweep starts on its own. **Stop scan** means it is already moving.
+- Gain, volume, band, range, dwell, step, mode, demod, and the VFO checkboxes are saved in `%LOCALAPPDATA%\ShackHack\settings.txt` and restored on the next launch.
 - **Band** — FM, airband, VHF, NOAA, GMRS, 70 cm, …
 - **Mode** — bounce, forward, backward, random
 - **Dwell / Step** — shack-hack speed
