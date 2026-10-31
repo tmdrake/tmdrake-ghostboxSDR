@@ -32,14 +32,11 @@ fn main() -> anyhow::Result<()> {
         SourceKind::Rtl
     };
 
-    let mut viewport = egui::ViewportBuilder::default()
+    let viewport = egui::ViewportBuilder::default()
         .with_inner_size([1280.0, 800.0])
         .with_min_inner_size([960.0, 600.0])
         .with_title("Drake's Box SDR — SDR SPIRIT BOX")
         .with_active(true);
-    if let Ok(icon) = eframe::icon_data::from_png_bytes(include_bytes!("../assets/icon.png")) {
-        viewport = viewport.with_icon(icon);
-    }
 
     let options = eframe::NativeOptions {
         viewport,

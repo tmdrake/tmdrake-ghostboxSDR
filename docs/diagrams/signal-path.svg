@@ -21,15 +21,7 @@
   <path d="M 12 592 L 12 608 L 28 608" fill="none" stroke="#00ff6a" stroke-width="2"/>
   <path d="M 1108 592 L 1108 608 L 1092 608" fill="none" stroke="#00ff6a" stroke-width="2"/>
 
-  <g transform="translate(36,18)" stroke="#00ff6a" fill="none" stroke-width="1.4">
-    <circle cx="10" cy="6" r="4"/>
-    <line x1="10" y1="10" x2="10" y2="22"/>
-    <line x1="10" y1="14" x2="2" y2="16"/>
-    <line x1="10" y1="14" x2="18" y2="16"/>
-    <line x1="10" y1="22" x2="4" y2="32"/>
-    <line x1="10" y1="22" x2="16" y2="32"/>
-  </g>
-  <text x="64" y="42" fill="#00ff6a" font-family="Consolas, ui-monospace, monospace" font-size="18" font-weight="700">DRAKE'S BOX SDR</text>
+  <text x="36" y="42" fill="#00ff6a" font-family="Consolas, ui-monospace, monospace" font-size="18" font-weight="700">DRAKE'S BOX SDR</text>
   <text x="250" y="42" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="14">SDR SPIRIT BOX</text>
   <text x="36" y="66" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="13">Always-on analog sweep. Park the tuner, walk software contacts, hop the PLL only at the window edge.</text>
 
