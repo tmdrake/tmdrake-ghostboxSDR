@@ -2759,8 +2759,6 @@ checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 [[package]]
 name = "rs-rtl"
 version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44dac86f459e54b8256e51ee865ac63e4e2058c11c7ff5361ed7e7deeaa1ecd9"
 dependencies = [
  "nusb",
  "thiserror 2.0.21",

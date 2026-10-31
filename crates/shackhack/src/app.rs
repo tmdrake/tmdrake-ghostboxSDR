@@ -108,15 +108,18 @@ impl eframe::App for ShackHackApp {
             }
             if let Some(err) = &snap.error {
                 ui.colored_label(theme::ALERT, err);
-                ui.label(
-                    RichText::new(
-                        "No kernel driver to compile. Bind Microsoft WinUSB to Bulk-In Interface 0.",
-                    )
-                    .monospace()
-                    .color(PHOSPHOR_DIM),
-                );
+                let driver_hint = err.contains("setup-driver") || err.contains("WinUSB");
+                if driver_hint {
+                    ui.label(
+                        RichText::new(
+                            "No kernel driver to compile. Bind Microsoft WinUSB to Bulk-In Interface 0.",
+                        )
+                        .monospace()
+                        .color(PHOSPHOR_DIM),
+                    );
+                }
                 #[cfg(windows)]
-                {
+                if driver_hint {
                     if ui.button("Install WinUSB package…").clicked() {
                         match crate::winusb::start_installer() {
                             Ok(p) => {
