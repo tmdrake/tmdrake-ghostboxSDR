@@ -5,7 +5,7 @@ use eframe::egui::{
 };
 use shackhack_bands::{self, BandPreset, Demod, SweepMode};
 use shackhack_dsp::colormap::db_to_color;
-use shackhack_dsp::sweep::Mode;
+
 use shackhack_dsp::vfo::{DemodKind, VFO_COUNT};
 use shackhack_sdr::{Command, RadioHandle, SourceKind};
 
@@ -207,8 +207,8 @@ impl ShackHackApp {
                     .color(PHOSPHOR_DIM),
             );
             ui.separator();
-            theme::live_badge(ui, snap.sweeping, ui.input(|i| i.time));
-            let sweep_label = if snap.sweeping {
+            theme::live_badge(ui, self.settings.scanning, ui.input(|i| i.time));
+            let sweep_label = if self.settings.scanning {
                 "Stop scan"
             } else {
                 "Start scan"
@@ -219,9 +219,10 @@ impl ShackHackApp {
                 ))
                 .clicked()
             {
-                self.settings.scanning = !snap.sweeping;
+                self.settings.scanning = !self.settings.scanning;
                 self.settings.save();
-                self.radio.send(Command::SetSweeping(!snap.sweeping));
+                self.radio
+                    .send(Command::SetSweeping(self.settings.scanning));
             }
             ui.separator();
             let display = snap.vfos[0].display_hz;
@@ -250,20 +251,14 @@ impl ShackHackApp {
                             .selectable_label(self.preset_id == p.id, p.name)
                             .clicked()
                         {
-                            self.apply_preset(p, snap.mode);
+                            self.apply_preset(p);
                         }
                     }
                 });
             ui.separator();
             ui.label("Mode");
             for m in SweepMode::all() {
-                let on = matches!(
-                    (snap.mode, m),
-                    (Mode::Bounce, SweepMode::Bounce)
-                        | (Mode::Forward, SweepMode::Forward)
-                        | (Mode::Backward, SweepMode::Backward)
-                        | (Mode::Random, SweepMode::Random)
-                );
+                let on = self.settings.mode == *m;
                 if ui.selectable_label(on, m.as_str()).clicked() {
                     self.settings.mode = *m;
                     self.settings.save();
@@ -285,42 +280,35 @@ impl ShackHackApp {
                 self.settings.save();
                 self.radio
                     .send(Command::SetGain((self.gain_db * 10.0).round() as i32));
-            } else if !resp.dragged() {
-                self.gain_db = snap.gain_tenth_db as f32 / 10.0;
             }
             if snap.clip {
                 ui.colored_label(theme::ALERT, "OVERLOAD — drop gain");
             }
             ui.separator();
             ui.label("Dwell");
-            let mut dwell = snap.dwell_ms as f32;
+            let mut dwell = self.settings.dwell_ms as f32;
             if ui
                 .add(egui::Slider::new(&mut dwell, 10.0..=200.0).suffix(" ms"))
                 .changed()
             {
-                self.settings.dwell_ms = dwell as u32;
+                self.settings.dwell_ms = dwell.round() as u32;
                 self.settings.save();
-                self.radio.send(Command::SetDwell(dwell as u32));
+                self.radio.send(Command::SetDwell(self.settings.dwell_ms));
             }
             ui.label("Step");
-            let mut step = snap.step_hz as f32 / 1000.0;
+            let mut step = self.settings.step_hz as f32 / 1000.0;
             if ui
                 .add(egui::Slider::new(&mut step, 5.0..=400.0).suffix(" kHz"))
                 .changed()
             {
-                self.settings.step_hz = (step * 1000.0) as u64;
+                self.settings.step_hz = (step * 1000.0).round() as u64;
                 self.settings.save();
-                self.radio.send(Command::SetStep((step * 1000.0) as u64));
+                self.radio.send(Command::SetStep(self.settings.step_hz));
             }
             ui.separator();
             ui.label("Demod");
             for d in Demod::all() {
-                let on = matches!(
-                    (snap.demod, d),
-                    (DemodKind::Wfm, Demod::Wfm)
-                        | (DemodKind::Nfm, Demod::Nfm)
-                        | (DemodKind::Am, Demod::Am)
-                );
+                let on = self.settings.demod == *d;
                 if ui.selectable_label(on, d.as_str()).clicked() {
                     self.settings.demod = *d;
                     self.settings.save();
@@ -331,17 +319,17 @@ impl ShackHackApp {
             ui.label(RichText::new("SIG").monospace().color(PHOSPHOR_DIM));
             theme::emf_bar(ui, snap.audio_rms);
             ui.label("Vol");
-            let mut vol = snap.volume;
+            let mut vol = self.settings.volume;
             if ui.add(egui::Slider::new(&mut vol, 0.0..=1.2)).changed() {
                 self.settings.volume = vol;
                 self.settings.save();
                 self.radio.send(Command::SetVolume(vol));
             }
-            let mute_l = if snap.mute { "Unmute" } else { "Mute" };
+            let mute_l = if self.settings.mute { "Unmute" } else { "Mute" };
             if ui.button(mute_l).clicked() {
-                self.settings.mute = !snap.mute;
+                self.settings.mute = !self.settings.mute;
                 self.settings.save();
-                self.radio.send(Command::SetMute(!snap.mute));
+                self.radio.send(Command::SetMute(self.settings.mute));
             }
         });
         ui.add_space(2.0);
@@ -354,7 +342,7 @@ impl ShackHackApp {
             for i in 0..VFO_COUNT {
                 let v = &snap.vfos[i];
                 ui.separator();
-                let mut on = v.enabled;
+                let mut on = self.settings.vfo_on[i];
                 if ui
                     .checkbox(
                         &mut on,
@@ -373,7 +361,7 @@ impl ShackHackApp {
                     ui.colored_label(PHOSPHOR_DIM, "off-field");
                 }
                 if i > 0 {
-                    let mut mix = v.mix;
+                    let mut mix = self.settings.vfo_mix[i];
                     if ui
                         .add(egui::Slider::new(&mut mix, 0.0..=1.0).max_decimals(2))
                         .changed()
@@ -387,9 +375,21 @@ impl ShackHackApp {
         });
         ui.horizontal(|ui| {
             ui.label("Custom range MHz");
-            ui.add(egui::DragValue::new(&mut self.custom_min_mhz).speed(0.1));
+            if ui
+                .add(egui::DragValue::new(&mut self.custom_min_mhz).speed(0.1))
+                .changed()
+            {
+                self.settings.min_mhz = self.custom_min_mhz;
+                self.settings.save();
+            }
             ui.label("–");
-            ui.add(egui::DragValue::new(&mut self.custom_max_mhz).speed(0.1));
+            if ui
+                .add(egui::DragValue::new(&mut self.custom_max_mhz).speed(0.1))
+                .changed()
+            {
+                self.settings.max_mhz = self.custom_max_mhz;
+                self.settings.save();
+            }
             if ui.button("Apply range").clicked() {
                 let min = (self.custom_min_mhz * 1e6) as u64;
                 let max = (self.custom_max_mhz * 1e6) as u64;
@@ -414,7 +414,7 @@ impl ShackHackApp {
         });
     }
 
-    fn apply_preset(&mut self, p: &BandPreset, mode: Mode) {
+    fn apply_preset(&mut self, p: &BandPreset) {
         self.preset_id = p.id.to_string();
         self.custom_min_mhz = p.start_hz as f64 / 1e6;
         self.custom_max_mhz = p.end_hz as f64 / 1e6;
@@ -431,12 +431,7 @@ impl ShackHackApp {
             step_hz: p.step_hz,
             dwell_ms: p.dwell_ms,
             demod: p.demod,
-            mode: match mode {
-                Mode::Bounce => SweepMode::Bounce,
-                Mode::Forward => SweepMode::Forward,
-                Mode::Backward => SweepMode::Backward,
-                Mode::Random => SweepMode::Random,
-            },
+            mode: self.settings.mode,
         });
         self.overview.fill(-90.0);
     }

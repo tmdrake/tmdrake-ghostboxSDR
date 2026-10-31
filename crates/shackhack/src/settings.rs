@@ -125,9 +125,9 @@ impl Settings {
                 radio.send(Command::ApplyPreset {
                     start_hz: p.start_hz,
                     end_hz: p.end_hz,
-                    step_hz: p.step_hz,
-                    dwell_ms: p.dwell_ms,
-                    demod: p.demod,
+                    step_hz: self.step_hz,
+                    dwell_ms: self.dwell_ms,
+                    demod: self.demod,
                     mode: self.mode,
                 });
             }
