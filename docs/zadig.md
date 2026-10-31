@@ -19,7 +19,7 @@ cargo run --release -p shackhack -- --setup-driver
 
 The package lists RTL-like USB devices, downloads official [Zadig 2.9](https://github.com/pbatard/libwdi/releases/download/v1.5.1/zadig-2.9.exe) (SHA-256 pinned) into `%LOCALAPPDATA%\ShackHack\tools\`, and launches it elevated. Details: [packaging/windows/README.md](../packaging/windows/README.md).
 
-In the GUI, a missing dongle shows **Install WinUSB package…**.
+In the GUI, a missing driver shows **Install WinUSB package…**. Startup does the same check: if the radio interface needs WinUSB, Zadig opens on its own. You still confirm the admin prompt and click **Replace Driver**.
 
 ## What to click in Zadig
 

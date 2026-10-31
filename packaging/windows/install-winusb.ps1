@@ -7,6 +7,7 @@
 param(
     [switch] $Status,
     [switch] $Install,
+    [switch] $Check,
     [switch] $Help
 )
 
@@ -42,6 +43,9 @@ function Show-Help {
     Write-Host ""
     Write-Host "  powershell -ExecutionPolicy Bypass -File packaging/windows/install-winusb.ps1"
     Write-Host "  powershell -ExecutionPolicy Bypass -File packaging/windows/install-winusb.ps1 -Status"
+    Write-Host "  powershell -ExecutionPolicy Bypass -File packaging/windows/install-winusb.ps1 -Check"
+    Write-Host ""
+    Write-Host "  -Check prints READY, NEED, or ABSENT. The app uses NEED to open Zadig at startup."
     Write-Host ""
     Write-Host "  In Zadig: Options -> List All Devices"
     Write-Host "            Bulk-In, Interface (Interface 0)   (MI_00)"
@@ -97,6 +101,71 @@ function Get-Prop {
         return $Fallback
     }
     return [string] $v.Value
+}
+
+function Get-RadioToken {
+    $devs = @(Get-RtlUsbDevices)
+    if ($devs.Count -eq 0) {
+        return "ABSENT"
+    }
+    $sawRadio = $false
+    $radioReady = $false
+    foreach ($d in $devs) {
+        $id = Get-Prop $d "InstanceId"
+        $isRadio = $false
+        if ($id -match "MI_00") { $isRadio = $true }
+        if ($id -notmatch "MI_") { $isRadio = $true }
+        if (-not $isRadio) { continue }
+        $sawRadio = $true
+        $svc = Get-DeviceService -InstanceId $id
+        if ($svc -eq "WinUSB") { $radioReady = $true }
+    }
+    if (-not $sawRadio) { return "ABSENT" }
+    if ($radioReady) { return "READY" }
+    return "NEED"
+}
+
+function Get-NeedInterface {
+    foreach ($d in @(Get-RtlUsbDevices)) {
+        $id = Get-Prop $d "InstanceId"
+        if ($id -notmatch "MI_00") { continue }
+        $svc = Get-DeviceService -InstanceId $id
+        if ($svc -eq "WinUSB") { continue }
+        if ($id -match "VID_([0-9A-F]{4})&PID_([0-9A-F]{4})") {
+            return @{ Vid = $Matches[1]; Pid = $Matches[2] }
+        }
+    }
+    return $null
+}
+
+function Write-ZadigIni {
+    param(
+        [string] $Vid = "",
+        [string] $Pid = ""
+    )
+    $lines = @(
+        "[general]",
+        "  advanced_mode = false",
+        "  exit_on_success = false",
+        "",
+        "[device]",
+        "  list_all = true",
+        "  include_hubs = false",
+        "  trim_whitespaces = true"
+    )
+    if (-not [string]::IsNullOrWhiteSpace($Vid) -and -not [string]::IsNullOrWhiteSpace($Pid)) {
+        $lines += @(
+            "  VID = 0x$Vid",
+            "  PID = 0x$Pid",
+            "  MI = 0x00"
+        )
+    }
+    $lines += @(
+        "",
+        "[driver]",
+        "  default_driver = 0"
+    )
+    Set-Content -Path (Join-Path $ToolsDir "zadig.ini") -Value $lines -Encoding ASCII
 }
 
 function Write-DeviceStatus {
@@ -158,27 +227,24 @@ function Get-Zadig {
         Remove-Item -Force $ZadigPath -ErrorAction SilentlyContinue
         throw ("Zadig SHA-256 mismatch. Expected {0} got {1}" -f $ZadigSha256, $hash)
     }
-    $iniLines = @(
-        "[general]",
-        "  advanced_mode = false",
-        "  exit_on_success = false",
-        "",
-        "[device]",
-        "  list_all = true",
-        "  include_hubs = false",
-        "  trim_whitespaces = true",
-        "",
-        "[driver]",
-        "  default_driver = 0"
-    )
-    Set-Content -Path (Join-Path $ToolsDir "zadig.ini") -Value $iniLines -Encoding ASCII
+    Write-ZadigIni
     return $ZadigPath
 }
 
 function Install-WinUsb {
+    $running = @(Get-Process -Name "zadig" -ErrorAction SilentlyContinue)
+    if ($running.Count -gt 0) {
+        Write-Host "Zadig is already open. Use Bulk-In Interface 0, target WinUSB, Replace Driver."
+        return
+    }
     $null = Write-DeviceStatus
     Write-Host ""
     $zadig = Get-Zadig
+    $preset = Get-NeedInterface
+    if ($null -ne $preset) {
+        Write-ZadigIni -Vid $preset.Vid -Pid $preset.Pid
+        Write-Host ("Zadig preset: VID {0} PID {1} interface 0." -f $preset.Vid, $preset.Pid)
+    }
     Write-Host "Launching Zadig as Administrator."
     Write-Host "Select Bulk-In, Interface (Interface 0). Target WinUSB. Replace Driver."
     Write-Host "Do not pick the composite parent or Interface 1."
@@ -187,6 +253,13 @@ function Install-WinUsb {
 
 if ($Help) {
     Show-Help
+    exit 0
+}
+
+if ($Check -and -not $Install) {
+    $token = Get-RadioToken
+    Write-Output $token
+    if ($token -eq "NEED") { exit 2 }
     exit 0
 }
 

@@ -77,6 +77,8 @@ cargo run --release -p shackhack -- --setup-driver
 
 The package finds the dongle, downloads official Zadig (hash-pinned), and launches it elevated. In Zadig: **Bulk-In, Interface (Interface 0)** → **WinUSB** → Replace Driver. Unplug/replug.
 
+On a normal launch, ShackHack checks the stick. If Interface 0 is not WinUSB, it opens Zadig for you. Windows still shows the admin prompt, and you still click **Replace Driver**. A missing dongle does not open Zadig. `--synth` skips the check.
+
 See [packaging/windows/README.md](packaging/windows/README.md) and [docs/zadig.md](docs/zadig.md).
 
 ## Build

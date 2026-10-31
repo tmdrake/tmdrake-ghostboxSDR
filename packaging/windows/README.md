@@ -28,6 +28,8 @@ The script:
 
 In Zadig: **Bulk-In, Interface (Interface 0)** → **WinUSB** → Replace Driver. Unplug and replug. Then run ShackHack.
 
+The app runs the same check at startup (`-Check`). `NEED` opens Zadig elevated and, when Interface 0 is visible, presets its VID/PID. `READY` and `ABSENT` do not. Windows will not install a driver with no confirmation.
+
 Interface 1 is the IR receiver. Leave it.
 
 ## What this is not

@@ -65,6 +65,37 @@ pub fn print_status() -> anyhow::Result<()> {
     }
 }
 
+/// If a cheap RTL-SDR is plugged in and Bulk-In Interface 0 is not WinUSB, open Zadig.
+/// Returns a user-facing note when the installer was started. `None` when nothing is needed.
+pub fn ensure_if_needed() -> anyhow::Result<Option<String>> {
+    let Some(script) = find_script() else {
+        return Ok(None);
+    };
+    let output = powershell()
+        .arg("-File")
+        .arg(&script)
+        .arg("-Check")
+        .output()?;
+    if !output.status.success() && output.status.code() != Some(2) {
+        let err = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("WinUSB check failed: {}", err.trim());
+    }
+    let text = String::from_utf8_lossy(&output.stdout);
+    let token = text
+        .lines()
+        .map(str::trim)
+        .find(|l| matches!(*l, "READY" | "NEED" | "ABSENT"))
+        .unwrap_or("");
+    if token != "NEED" {
+        return Ok(None);
+    }
+    start_installer()?;
+    Ok(Some(
+        "WinUSB missing on Interface 0. Zadig is opening — confirm the prompt, pick Bulk-In Interface 0, then Replace Driver."
+            .to_string(),
+    ))
+}
+
 pub fn setup() -> anyhow::Result<()> {
     let script = find_script().ok_or_else(|| {
         anyhow::anyhow!(

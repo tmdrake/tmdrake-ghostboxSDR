@@ -22,6 +22,7 @@ pub struct ShackHackApp {
     custom_max_mhz: f64,
     gain_db: f32,
     driver_note: Option<String>,
+    driver_events: std::sync::mpsc::Receiver<String>,
 }
 
 impl ShackHackApp {
@@ -42,13 +43,42 @@ impl ShackHackApp {
             custom_max_mhz: 108.0,
             gain_db: 29.6,
             driver_note: None,
+            driver_events: spawn_driver_check(kind),
         }
     }
+}
+
+fn spawn_driver_check(kind: SourceKind) -> std::sync::mpsc::Receiver<String> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    if kind != SourceKind::Rtl {
+        drop(tx);
+        return rx;
+    }
+    #[cfg(windows)]
+    {
+        std::thread::spawn(move || match crate::winusb::ensure_if_needed() {
+            Ok(Some(msg)) => {
+                let _ = tx.send(msg);
+            }
+            Ok(None) => {}
+            Err(e) => {
+                let _ = tx.send(format!("WinUSB check failed: {e}"));
+            }
+        });
+    }
+    #[cfg(not(windows))]
+    {
+        drop(tx);
+    }
+    rx
 }
 
 impl eframe::App for ShackHackApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.request_repaint();
+        if let Ok(msg) = self.driver_events.try_recv() {
+            self.driver_note = Some(msg);
+        }
         let snap = self.radio.snapshot.lock().clone();
 
         if snap.spectrum.len() >= 32 {
@@ -69,6 +99,13 @@ impl eframe::App for ShackHackApp {
                 self.bottom_bar(ui, &snap);
             });
         egui::CentralPanel::default().show(ctx, |ui| {
+            if let Some(note) = &self.driver_note {
+                ui.label(
+                    RichText::new(note)
+                        .monospace()
+                        .color(theme::AMBER),
+                );
+            }
             if let Some(err) = &snap.error {
                 ui.colored_label(theme::ALERT, err);
                 ui.label(
@@ -92,9 +129,6 @@ impl eframe::App for ShackHackApp {
                         }
                     }
                     ui.label("or: shackhack --setup-driver");
-                }
-                if let Some(note) = &self.driver_note {
-                    ui.label(RichText::new(note).weak());
                 }
                 ui.separator();
             }
