@@ -79,6 +79,17 @@ On a normal launch, ShackHack checks the stick. If Interface 0 is not WinUSB, it
 
 See [docs/drivers.md](docs/drivers.md), [packaging/windows/README.md](packaging/windows/README.md), and [docs/zadig.md](docs/zadig.md).
 
+## Streaming
+
+ShackHack plays demod audio on the Windows default output. **VB-Audio Virtual Cable** is the streaming path: desktop audio, including the radio, goes into the cable, and the stream captures that cable instead of the microphone.
+
+- Playback default: **CABLE Input (VB-Audio Virtual Cable)**. That is where the desktop audio enters.
+- Stream input: **CABLE Output (VB-Audio Virtual Cable)**. Pick this in the streaming app.
+- On CABLE Output, turn on **Listen to this device** and send it to the real speakers, so the desk still hears the sweep.
+- Leave the real microphone (here, the C920 webcam) as the default recording device. The cable is the desktop-audio source, not the voice mic.
+
+Both ends of the cable are 48 kHz stereo. The driver is donationware from [vb-audio.com](https://vb-audio.com/Cable/) and is not part of this repo.
+
 ## Build
 
 Needs Rust (`rustup`) and, on Windows, the MSVC build tools (for `eframe` / `wgpu`).
@@ -106,7 +117,7 @@ cargo run --release -p shackhack -- --synth
 
 ## Controls
 
-- **Start scan / Stop scan** — the sweep starts on its own. **Stop scan** means it is already moving.
+- **Full range** — sweep from the lowest frequency this stick can tune to the highest. On this E4000 that is about 52 MHz–1700 MHz. A generic R820T is about 24 MHz–1766 MHz. A Blog V4 starts at 500 kHz. Step starts at 250 kHz, narrow FM.
 - Gain, volume, band, range, dwell, step, mode, demod, and the VFO checkboxes are saved in `%LOCALAPPDATA%\ShackHack\settings.txt` and restored on the next launch.
 - **Band** — FM, airband, VHF, NOAA, GMRS, 70 cm, …
 - **Mode** — bounce, forward, backward, random

@@ -265,7 +265,11 @@ impl ShackHackApp {
                 .selected_text(
                     shackhack_bands::preset_by_id(&self.preset_id)
                         .map(|p| p.name)
-                        .unwrap_or("Custom"),
+                        .unwrap_or(if self.preset_id == "full" {
+                            "Full range"
+                        } else {
+                            "Custom"
+                        }),
                 )
                 .show_ui(ui, |ui| {
                     for p in shackhack_bands::available_presets(snap.hf_ok) {
@@ -277,6 +281,12 @@ impl ShackHackApp {
                         }
                     }
                 });
+            if ui
+                .selectable_label(self.preset_id == "full", "Full range")
+                .clicked()
+            {
+                self.apply_full_range(snap);
+            }
             ui.separator();
             ui.label("Mode");
             for m in SweepMode::all() {
@@ -448,6 +458,31 @@ impl ShackHackApp {
         self.radio.send(Command::SetMute(false));
         self.radio.send(Command::SetSweeping(false));
         self.radio.send(Command::TuneA(hz));
+    }
+
+    fn apply_full_range(&mut self, snap: &shackhack_sdr::Snapshot) {
+        let min = snap.tuner_min_hz.max(1);
+        let max = snap.tuner_max_hz.max(min + 1);
+        self.preset_id = "full".into();
+        self.custom_min_mhz = min as f64 / 1e6;
+        self.custom_max_mhz = max as f64 / 1e6;
+        self.settings.preset_id = "full".into();
+        self.settings.min_mhz = self.custom_min_mhz;
+        self.settings.max_mhz = self.custom_max_mhz;
+        self.settings.step_hz = 250_000;
+        self.settings.dwell_ms = 25;
+        self.settings.demod = Demod::Nfm;
+        self.settings.scanning = true;
+        self.settings.save();
+        self.radio.send(Command::SetRange {
+            min_hz: min,
+            max_hz: max,
+        });
+        self.radio.send(Command::SetStep(self.settings.step_hz));
+        self.radio.send(Command::SetDwell(self.settings.dwell_ms));
+        self.radio.send(Command::SetDemod(Demod::Nfm));
+        self.radio.send(Command::SetSweeping(true));
+        self.overview.fill(-90.0);
     }
 
     fn apply_preset(&mut self, p: &BandPreset) {

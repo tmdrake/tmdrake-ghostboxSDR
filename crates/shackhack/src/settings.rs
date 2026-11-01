@@ -120,21 +120,19 @@ impl Settings {
     }
 
     pub fn push(&self, radio: &RadioHandle) {
-        if self.preset_id != "custom" {
-            if let Some(p) = shackhack_bands::preset_by_id(&self.preset_id) {
-                radio.send(Command::ApplyPreset {
-                    start_hz: p.start_hz,
-                    end_hz: p.end_hz,
-                    step_hz: self.step_hz,
-                    dwell_ms: self.dwell_ms,
-                    demod: self.demod,
-                    mode: self.mode,
-                });
-            }
-        } else {
+        if self.preset_id == "custom" || self.preset_id == "full" {
             radio.send(Command::SetRange {
                 min_hz: (self.min_mhz * 1e6) as u64,
                 max_hz: (self.max_mhz * 1e6) as u64,
+            });
+        } else if let Some(p) = shackhack_bands::preset_by_id(&self.preset_id) {
+            radio.send(Command::ApplyPreset {
+                start_hz: p.start_hz,
+                end_hz: p.end_hz,
+                step_hz: self.step_hz,
+                dwell_ms: self.dwell_ms,
+                demod: self.demod,
+                mode: self.mode,
             });
         }
         radio.send(Command::SetMode(self.mode));

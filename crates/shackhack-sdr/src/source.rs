@@ -118,12 +118,12 @@ impl RtlSource {
             TunerType::E4000 => "E4000",
         };
         let hf_ok = matches!(sdr.board_variant(), BoardVariant::RtlSdrBlogV4);
-        let min_hz = if hf_ok {
-            V4_MIN_HZ
+        let (min_hz, max_hz) = if hf_ok {
+            (V4_MIN_HZ, GENERIC_MAX_HZ)
         } else if sdr.tuner_type() == TunerType::E4000 {
-            52_000_000
+            (52_000_000, 1_700_000_000)
         } else {
-            GENERIC_MIN_HZ
+            (GENERIC_MIN_HZ, GENERIC_MAX_HZ)
         };
         let product = desc
             .as_ref()
@@ -141,7 +141,7 @@ impl RtlSource {
                 label,
                 tuner: tuner.into(),
                 min_hz,
-                max_hz: GENERIC_MAX_HZ,
+                max_hz,
                 hf_ok,
                 gains,
             },
