@@ -18,6 +18,11 @@ const SYNTH4: u8 = 0x0a;
 const SYNTH5: u8 = 0x0b;
 const SYNTH7: u8 = 0x0d;
 const GAIN1: u8 = 0x14;
+const GAIN2: u8 = 0x15;
+const GAIN3: u8 = 0x16;
+const GAIN4: u8 = 0x17;
+const AGC1: u8 = 0x1a;
+const AGC7: u8 = 0x20;
 const BIAS: u8 = 0x78;
 
 /// Upper edge of each PLL row, the SYNTH7 byte, and the output divider.
@@ -34,8 +39,9 @@ const PLL: &[(u32, u8, u32)] = &[
     (1_200_000_000, 1, 4),
 ];
 
+/// 0–70 dB. The slider can now reach the weak-signal end of the E4000.
 const GAINS_TENTH_DB: &[i32] = &[
-    0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300,
+    0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700,
 ];
 
 #[derive(Clone)]
@@ -67,6 +73,10 @@ impl E4k {
         self.write(dev, REF_CLK, 0x00)?;
         self.write(dev, MASTER1, 0x00)?;
         self.write(dev, BIAS, 0x03)?;
+        // Manual gain. Leave the AGC loops off so the slider is the only control.
+        self.write(dev, AGC1, 0x00)?;
+        let agc7 = self.read(dev, AGC7).unwrap_or(0);
+        self.write(dev, AGC7, agc7 & !0x01)?;
         self.write_gain(dev, self.gain_tenth_db)?;
         Ok(())
     }
@@ -122,17 +132,45 @@ impl E4k {
     }
 
     fn write_gain(&mut self, dev: &Device, gain_tenth_db: i32) -> Result<()> {
-        let mut best = 0usize;
+        let mut best = GAINS_TENTH_DB[0];
         let mut best_err = i32::MAX;
-        for (i, g) in GAINS_TENTH_DB.iter().enumerate() {
+        for g in GAINS_TENTH_DB {
             let err = (g - gain_tenth_db).abs();
             if err < best_err {
-                best = i;
+                best = *g;
                 best_err = err;
             }
         }
-        self.gain_tenth_db = GAINS_TENTH_DB[best];
-        self.write(dev, GAIN1, (best as u8) << 4)
+        self.gain_tenth_db = best;
+        let db = (best / 10).clamp(0, 70);
+        // LNA takes the first 25 dB in 5 dB steps. Mixer adds 6. Six IF
+        // stages take the rest in 3 dB steps, up to 9 dB each.
+        let lna = (db.min(25) / 5) as u8;
+        let mut rest = db - i32::from(lna) * 5;
+        let mixer: u8 = if rest >= 6 { 1 } else { 0 };
+        if mixer == 1 {
+            rest -= 6;
+        }
+        let mut stage = [0u8; 6];
+        for step in &mut stage {
+            let give = if rest >= 9 {
+                9
+            } else if rest >= 6 {
+                6
+            } else if rest >= 3 {
+                3
+            } else {
+                0
+            };
+            rest -= give;
+            *step = (give / 3) as u8;
+        }
+        self.write(dev, GAIN1, lna & 0x0f)?;
+        self.write(dev, GAIN2, mixer)?;
+        let gain3 = stage[0] | (stage[1] << 2) | (stage[2] << 4) | (stage[3] << 6);
+        let gain4 = stage[4] | (stage[5] << 2);
+        self.write(dev, GAIN3, gain3)?;
+        self.write(dev, GAIN4, gain4)
     }
 
     fn write(&self, dev: &Device, reg: u8, val: u8) -> Result<()> {

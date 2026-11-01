@@ -24,6 +24,8 @@ pub struct ShackHackApp {
     custom_max_mhz: f64,
     gain_db: f32,
     tune_mhz: f64,
+    spec_avg: Vec<f32>,
+    spec_peak: Vec<f32>,
     settings: Settings,
     driver_note: Option<String>,
     driver_events: std::sync::mpsc::Receiver<String>,
@@ -49,6 +51,8 @@ impl ShackHackApp {
             custom_max_mhz: settings.max_mhz,
             gain_db: settings.gain_db,
             tune_mhz: 95.5,
+            spec_avg: Vec::new(),
+            spec_peak: Vec::new(),
             settings,
             driver_note: None,
             driver_events: spawn_driver_check(kind),
@@ -90,11 +94,10 @@ impl eframe::App for ShackHackApp {
         let snap = self.radio.snapshot.lock().clone();
 
         if snap.spectrum.len() >= 32 {
-            self.push_waterfall(
-                &snap.spectrum,
-                snap.floor_db - 5.0,
-                snap.peak_db.max(snap.floor_db + 25.0),
-            );
+            self.blend_spectrum(&snap.spectrum);
+            let avg = self.spec_avg.clone();
+            let floor = snap.floor_db;
+            self.push_waterfall(&avg, floor, floor + 45.0);
             self.accumulate_overview(&snap);
         }
 
@@ -516,15 +519,33 @@ impl ShackHackApp {
         theme::hud_frame(&painter, rect, "");
     }
 
-    fn paint_spectrum(&self, ui: &mut Ui, rect: Rect, snap: &shackhack_sdr::Snapshot) {
+    fn blend_spectrum(&mut self, fresh: &[f32]) {
+        if fresh.len() < 8 {
+            return;
+        }
+        if self.spec_avg.len() != fresh.len() {
+            self.spec_avg = fresh.to_vec();
+            self.spec_peak = fresh.to_vec();
+            return;
+        }
+        for (i, sample) in fresh.iter().enumerate() {
+            self.spec_avg[i] = self.spec_avg[i] * 0.72 + sample * 0.28;
+            let held = self.spec_peak[i] - 0.35;
+            self.spec_peak[i] = held.max(*sample);
+        }
+    }
+
+    fn paint_spectrum(&mut self, ui: &mut Ui, rect: Rect, snap: &shackhack_sdr::Snapshot) {
         let painter = ui.painter_at(rect);
         painter.rect_filled(rect, 0.0, SCOPE);
         let plot = Rect::from_min_max(
             Pos2::new(rect.left() + 46.0, rect.top() + 18.0),
             Pos2::new(rect.right() - 8.0, rect.bottom() - 20.0),
         );
-        let floor = snap.floor_db - 8.0;
-        let ceil = snap.peak_db.max(floor + 20.0);
+        let floor = snap.floor_db;
+        // Fixed 45 dB window above the noise. A weak carrier stays visible
+        // when a stronger one is also in the span.
+        let ceil = floor + 45.0;
         let grid = Color32::from_rgb(0, 70, 32);
         for i in 0..=4 {
             let t = i as f32 / 4.0;
@@ -552,15 +573,21 @@ impl ShackHackApp {
                 PHOSPHOR_DIM,
             );
         }
-        if snap.spectrum.len() >= 8 {
-            let n = snap.spectrum.len();
+        if self.spec_avg.len() >= 8 {
+            let n = self.spec_avg.len();
+            let mut hold = Vec::with_capacity(n);
             let mut pts = Vec::with_capacity(n);
-            for (i, db) in snap.spectrum.iter().enumerate() {
+            for i in 0..n {
                 let x = plot.left() + i as f32 / (n - 1) as f32 * plot.width();
-                let t = ((*db - floor) / (ceil - floor)).clamp(0.0, 1.0);
-                let y = plot.bottom() - t * plot.height();
-                pts.push(Pos2::new(x, y));
+                let t_hold = ((self.spec_peak[i] - floor) / (ceil - floor)).clamp(0.0, 1.0);
+                let t = ((self.spec_avg[i] - floor) / (ceil - floor)).clamp(0.0, 1.0);
+                hold.push(Pos2::new(x, plot.bottom() - t_hold * plot.height()));
+                pts.push(Pos2::new(x, plot.bottom() - t * plot.height()));
             }
+            painter.add(egui::Shape::line(
+                hold,
+                Stroke::new(1.0_f32, Color32::from_rgba_unmultiplied(0, 180, 80, 90)),
+            ));
             if pts.len() >= 2 {
                 let mut fill = pts.clone();
                 fill.push(Pos2::new(plot.right(), plot.bottom()));

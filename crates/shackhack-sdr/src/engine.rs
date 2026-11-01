@@ -195,7 +195,7 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                 v.freq_hz = sweeper.freq_hz as f64;
                 v
             });
-            let mut fft = FftProcessor::new(4096);
+            let mut fft = FftProcessor::new(8192);
             let mut iq: Vec<ComplexSample> = Vec::new();
             let mut fft_acc: Vec<ComplexSample> = Vec::new();
             let mut sweeping = true;
