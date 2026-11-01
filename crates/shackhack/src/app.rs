@@ -23,6 +23,7 @@ pub struct ShackHackApp {
     custom_min_mhz: f64,
     custom_max_mhz: f64,
     gain_db: f32,
+    tune_mhz: f64,
     settings: Settings,
     driver_note: Option<String>,
     driver_events: std::sync::mpsc::Receiver<String>,
@@ -47,6 +48,7 @@ impl ShackHackApp {
             custom_min_mhz: settings.min_mhz,
             custom_max_mhz: settings.max_mhz,
             gain_db: settings.gain_db,
+            tune_mhz: 95.5,
             settings,
             driver_note: None,
             driver_events: spawn_driver_check(kind),
@@ -238,6 +240,23 @@ impl ShackHackApp {
                     .color(PHOSPHOR_HOT),
             );
             ui.separator();
+            let mut mhz = self.tune_mhz;
+            if ui
+                .add(
+                    egui::DragValue::new(&mut mhz)
+                        .range(52.0..=1700.0)
+                        .speed(0.1)
+                        .max_decimals(3)
+                        .suffix(" MHz"),
+                )
+                .changed()
+            {
+                self.tune_mhz = mhz;
+            }
+            if ui.button("Listen").clicked() {
+                self.listen();
+            }
+            ui.separator();
             ui.label("Band");
             egui::ComboBox::from_id_salt("band")
                 .selected_text(
@@ -412,6 +431,20 @@ impl ShackHackApp {
                 );
             });
         });
+    }
+
+    fn listen(&mut self) {
+        let hz = (self.tune_mhz * 1_000_000.0).round() as u64;
+        self.settings.scanning = false;
+        self.settings.mute = false;
+        if (88_000_000..=108_000_000).contains(&hz) {
+            self.settings.demod = Demod::Wfm;
+            self.radio.send(Command::SetDemod(Demod::Wfm));
+        }
+        self.settings.save();
+        self.radio.send(Command::SetMute(false));
+        self.radio.send(Command::SetSweeping(false));
+        self.radio.send(Command::TuneA(hz));
     }
 
     fn apply_preset(&mut self, p: &BandPreset) {
