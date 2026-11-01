@@ -320,10 +320,10 @@ impl ShackHackApp {
             ui.label("Dwell");
             let mut dwell = self.settings.dwell_ms as f32;
             if ui
-                .add(egui::Slider::new(&mut dwell, 10.0..=1000.0).suffix(" ms"))
+                .add(egui::Slider::new(&mut dwell, 10.0..=500.0).suffix(" ms"))
                 .changed()
             {
-                self.settings.dwell_ms = (dwell.round() as u32).clamp(10, 1000);
+                self.settings.dwell_ms = (dwell.round() as u32).clamp(10, 500);
                 self.settings.save();
                 self.radio.send(Command::SetDwell(self.settings.dwell_ms));
             }

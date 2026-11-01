@@ -34,7 +34,7 @@ This shot is `shackhack --synth` (no dongle), so the peaks are fake stations. Th
 - **V1** is the cursor you hear. V2–V8 are the other cursors in the same window. They do not drag the picture with them.
 - On a short band the LO stays parked, so the waterfall does not slide while the VFOs walk. On **Full range** the LO hops every step. The number changes. New waterfall rows are the new slice. Old rows stay put until they scroll off, so a real station shows a break, not a smooth sideways slide.
 - If the LO number changes and the picture is still the same fuzzy floor, that slice has no carrier. Noise looks the same at every frequency. A station is the bright line that shows up in a new left-right place after the hop.
-- **Dwell** here is **100 ms**. The slider stops at **1000 ms** (1 second).
+- **Dwell** here is **100 ms**. The slider stops at **500 ms**.
 - **Listen** at **95.5** stops the scan and parks V1 there. **Stop scan** means the sweep is already running.
 
 ## Diagram — cheap RTL-SDR to speakers
@@ -136,7 +136,7 @@ The scan starts on open. **Stop scan** means it is already moving. **Start scan*
 - **Full range** — sweep from the lowest frequency this stick can tune to the highest. This E4000 is about **52–1700 MHz**. A generic R820T is about **24–1766 MHz**. A Blog V4 starts at **500 kHz**. The LO hops on every step. Dwell and demod are left as you set them. If the step is still under 100 kHz, Full range raises it to 250 kHz so a pass is minutes, not an hour.
 - **Band** — FM, airband, marine, NOAA, GMRS, 70 cm, …
 - **Mode** — bounce, forward, backward, random. Random jumps the LO around. Forward or bounce is the readable sweep.
-- **Dwell** — 10–1000 ms on each step (1 second at the top). **Step** — channel spacing in kHz.
+- **Dwell** — 10–500 ms on each step. **Step** — channel spacing in kHz.
 - **Gain** — RF gain in dB. **Vol** and **Mute**. **SIG** — audio-RMS LED bar (green → amber → red).
 - Click the spectrum while scanning to **park V2**. Stop the scan, then click to tune **V1**.
 
