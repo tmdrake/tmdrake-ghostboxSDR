@@ -16,25 +16,27 @@ Built for a **cheap USB RTL-SDR** (RTL2832U + R820T/R820T2). No upconverter, no 
 
 ## What it is
 
-Drake's Box SDR is a software ghost box in the line of **Frank Sumption's** ghost box (Frank's Box, 2002). Sumption's radio sweeps a band and leaves the audio open, with no squelch stop. The later Radio Shack "shack hack" is the same idea in a hacked consumer radio. This app does that sweep on a cheap RTL-SDR, but the **tuner stays parked** on a 2.4 MHz chunk and **software VFOs** walk the channels. The PLL only hops when the sweep walks off the window, so tuning looks smooth and the audio click is short.
+Drake's Box SDR is a software ghost box in the line of **Frank Sumption's** ghost box (Frank's Box, 2002). Sumption's radio sweeps a band and leaves the audio open, with no squelch stop. The later Radio Shack "shack hack" is the same idea in a hacked consumer radio. This app does that sweep on a cheap RTL-SDR.
 
-Default shack-hack: FM broadcast **88–108 MHz**, **WFM**, **150 kHz** steps, **30 ms** dwell, **bounce**, **29.6 dB** gain.
+The stick captures **~2.4 MHz at once**. On a normal band (FM, air, marine, NOAA) the **local oscillator stays parked** on that chunk and eight **software VFOs** walk inside it. The PLL hops only when V1 leaves the usable middle 80%, so a short band stays smooth. On a span wider than 30 MHz, including **Full range**, the LO hops onto every step so the readout and the waterfall follow the scan.
+
+Default shack-hack: FM broadcast **88–108 MHz**, **WFM**, **150 kHz** steps, **30 ms** dwell, **bounce**, **29.6 dB** gain. Anything you change is restored from the settings file on the next launch.
 
 ## Look
 
-Dark phosphor screen: spectrum analyzer, eight scanning VFOs, waterfall, a **SCANNING** badge, and an 8-cell **SIG** bar driven by audio RMS.
+Dark phosphor screen. The spectrum is an averaged trace over a fixed **45 dB** window above the noise, with a faint peak-hold behind it, so a weak carrier stays visible next to a louder one. Under that is the waterfall of the **same LO window**. The **LO** number in the status line is the center of both. V1–V8 are cursors inside that window. V1 is the one you hear. A bright steady line is a station. A fuzzy floor is noise.
 
 ## Diagram — cheap RTL-SDR to speakers
 
-Antenna in, IQ over USB, parked LO, four VFOs, waterfall and audio out.
+Antenna in, IQ over USB, parked LO on a short band, eight VFOs, waterfall and audio out.
 
 ![ShackHack signal path from a cheap RTL-SDR](docs/diagrams/signal-path.svg)
 
-The stick captures **~2.4 MHz at once**. Multi-VFO is four software slices of that same window (SDR# Sharp Slicer is Airspy-only).
+The stick captures **~2.4 MHz at once**. The eight VFOs are software slices of that same window.
 
 ![Parked LO window with software VFOs](docs/diagrams/lo-window.svg)
 
-Retuning the R820T on every 150 kHz step would click. ShackHack keeps the hardware LO still, mixes VFOs in software, crops 10% of each edge (tuner rolloff), and hops only when VFO A walks off the usable 80%. On a hop it drops 1–2 USB buffers and fades audio for a few milliseconds.
+Retuning on every small step would click, so a short band keeps the hardware LO still and hops only when V1 walks off the usable 80%. A wide span hops every step instead. Either hop drops 1–2 USB buffers and fades audio for a few milliseconds. 10% of each edge is cropped for tuner rolloff.
 
 ## Hardware floor (no upconverter)
 
@@ -54,11 +56,11 @@ Typical cheap kit:
 
 ## Gain
 
-The R820T has about **0–49.6 dB** of stepped RF gain. ShackHack exposes it as a **Gain (dB)** slider on the top bar and snaps to the tuner's real steps.
+The **Gain** slider is manual. Tuner AGC stays off.
 
-- Start around **25–30 dB**.
-- If the NV waterfall goes solid hot-white or you see **OVERLOAD**, drop gain.
-- Tuner AGC is not used on FM broadcast; strong stations will slam the ADC.
+- **R820T / R820T2:** about **0–49.6 dB**, snapped to the tuner's real steps. Start around **25–30 dB**.
+- **E4000** (this Terratec `0ccd:00d7`): about **0–70 dB**, split across the LNA, mixer, and IF stages. A weak location wants the slider up around **40–60 dB**. The old single-register cap near 30 dB was not enough.
+- If the waterfall pins solid hot-white or you see **OVERLOAD**, drop gain. A pinned trace hides weak stations the same way too little gain does.
 
 ## Windows driver (WinUSB package)
 
@@ -117,15 +119,20 @@ cargo run --release -p shackhack -- --synth
 
 ## Controls
 
-- **Full range** — sweep from the lowest frequency this stick can tune to the highest. On this E4000 that is about 52 MHz–1700 MHz. The LO hops onto each step so the readout moves. Dwell and demod stay as you set them.
-- Gain, volume, band, range, dwell, step, mode, demod, and the VFO checkboxes are saved in `%LOCALAPPDATA%\ShackHack\settings.txt` and restored on the next launch.
-- **Band** — FM, airband, VHF, NOAA, GMRS, 70 cm, …
-- **Mode** — bounce, forward, backward, random
-- **Dwell / Step** — shack-hack speed
-- **Gain** — RF gain in dB
-- **SIG** — audio-RMS LED bar (green → amber → red)
-- Click the spectrum while sweeping to **park VFO 2**
-- Stop the scan, then click the spectrum to tune **VFO 1**
+The scan starts on open. **Stop scan** means it is already moving. **Start scan** means it is held.
+
+- **Listen** — type a frequency (the box opens on **95.5**) and park **V1** there. The scan stops, mute turns off, and a broadcast-FM frequency forces wide FM. The LO hops so that frequency is in the window.
+- **Full range** — sweep from the lowest frequency this stick can tune to the highest. This E4000 is about **52–1700 MHz**. A generic R820T is about **24–1766 MHz**. A Blog V4 starts at **500 kHz**. The LO hops on every step. Dwell and demod are left as you set them. If the step is still under 100 kHz, Full range raises it to 250 kHz so a pass is minutes, not an hour.
+- **Band** — FM, airband, marine, NOAA, GMRS, 70 cm, …
+- **Mode** — bounce, forward, backward, random. Random jumps the LO around. Forward or bounce is the readable sweep.
+- **Dwell** — 10–2000 ms on each step. **Step** — channel spacing in kHz.
+- **Gain** — RF gain in dB. **Vol** and **Mute**. **SIG** — audio-RMS LED bar (green → amber → red).
+- Click the spectrum while scanning to **park V2**. Stop the scan, then click to tune **V1**.
+
+Settings are restored on the next launch: gain, volume, mute, band, custom range, full range, dwell, step, mode, demod, scan on/off, and each VFO's checkbox and mix.
+
+- Windows: `%LOCALAPPDATA%\ShackHack\settings.txt`
+- Linux: `~/.local/share/ShackHack/settings.txt`
 
 ## Analog voice presets (US)
 
