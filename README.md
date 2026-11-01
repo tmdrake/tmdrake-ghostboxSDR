@@ -26,6 +26,17 @@ Default shack-hack: FM broadcast **88–108 MHz**, **WFM**, **150 kHz** steps, *
 
 Dark phosphor screen. The spectrum is an averaged trace over a fixed **45 dB** window above the noise, with a faint peak-hold behind it, so a weak carrier stays visible next to a louder one. Under that is the waterfall of the **same LO window**. The **LO** number in the status line is the center of both. V1–V8 are cursors inside that window. V1 is the one you hear. A bright steady line is a station. A fuzzy floor is noise.
 
+![Drake's Box SDR, synth demo, full-range scan](docs/screenshots/radio.png)
+
+This shot is `shackhack --synth` (no dongle), so the peaks are fake stations. The layout is the live radio.
+
+- **LO 1436.460 MHz** is the center of the spectrum and the waterfall. Left to right is about 2.4 MHz around that number.
+- **V1** is the cursor you hear. V2–V8 are the other cursors in the same window. They do not drag the picture with them.
+- On a short band the LO stays parked, so the waterfall does not slide while the VFOs walk. On **Full range** the LO hops every step. The number changes. New waterfall rows are the new slice. Old rows stay put until they scroll off, so a real station shows a break, not a smooth sideways slide.
+- If the LO number changes and the picture is still the same fuzzy floor, that slice has no carrier. Noise looks the same at every frequency. A station is the bright line that shows up in a new left-right place after the hop.
+- **Dwell** here is **100 ms**. The slider stops at **1000 ms** (1 second).
+- **Listen** at **95.5** stops the scan and parks V1 there. **Stop scan** means the sweep is already running.
+
 ## Diagram — cheap RTL-SDR to speakers
 
 Antenna in, IQ over USB, parked LO on a short band, eight VFOs, waterfall and audio out.
@@ -167,6 +178,7 @@ flowchart LR
 | `crates/shackhack-dsp` | FFT, sweeper, AM/NFM/WFM VFOs |
 | `crates/shackhack-bands` | Band table and tuner floors |
 | `docs/diagrams/` | RTL-SDR photo + architecture SVGs |
+| `docs/screenshots/radio.png` | Window grab of the synth demo |
 | `packaging/windows/` | WinUSB bind package (Zadig, no `.sys` to build) |
 | `docs/drivers.md` | Windows WinUSB, E4000, and the Linux/Pi USB notes |
 | `docs/zadig.md` | Short WinUSB click-path |
