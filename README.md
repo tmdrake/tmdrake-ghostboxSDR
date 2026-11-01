@@ -117,7 +117,7 @@ cargo run --release -p shackhack -- --synth
 
 ## Controls
 
-- **Full range** — sweep from the lowest frequency this stick can tune to the highest. On this E4000 that is about 52 MHz–1700 MHz. A generic R820T is about 24 MHz–1766 MHz. A Blog V4 starts at 500 kHz. Step starts at 250 kHz, narrow FM.
+- **Full range** — sweep from the lowest frequency this stick can tune to the highest. On this E4000 that is about 52 MHz–1700 MHz. The LO hops onto each step so the readout moves. Dwell and demod stay as you set them.
 - Gain, volume, band, range, dwell, step, mode, demod, and the VFO checkboxes are saved in `%LOCALAPPDATA%\ShackHack\settings.txt` and restored on the next launch.
 - **Band** — FM, airband, VHF, NOAA, GMRS, 70 cm, …
 - **Mode** — bounce, forward, backward, random

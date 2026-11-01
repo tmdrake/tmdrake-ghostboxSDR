@@ -320,7 +320,7 @@ impl ShackHackApp {
             ui.label("Dwell");
             let mut dwell = self.settings.dwell_ms as f32;
             if ui
-                .add(egui::Slider::new(&mut dwell, 10.0..=200.0).suffix(" ms"))
+                .add(egui::Slider::new(&mut dwell, 10.0..=2000.0).suffix(" ms"))
                 .changed()
             {
                 self.settings.dwell_ms = dwell.round() as u32;
@@ -469,9 +469,9 @@ impl ShackHackApp {
         self.settings.preset_id = "full".into();
         self.settings.min_mhz = self.custom_min_mhz;
         self.settings.max_mhz = self.custom_max_mhz;
-        self.settings.step_hz = 250_000;
-        self.settings.dwell_ms = 25;
-        self.settings.demod = Demod::Nfm;
+        if self.settings.step_hz < 100_000 {
+            self.settings.step_hz = 250_000;
+        }
         self.settings.scanning = true;
         self.settings.save();
         self.radio.send(Command::SetRange {
@@ -480,7 +480,6 @@ impl ShackHackApp {
         });
         self.radio.send(Command::SetStep(self.settings.step_hz));
         self.radio.send(Command::SetDwell(self.settings.dwell_ms));
-        self.radio.send(Command::SetDemod(Demod::Nfm));
         self.radio.send(Command::SetSweeping(true));
         self.overview.fill(-90.0);
     }

@@ -10,7 +10,7 @@ use shackhack_dsp::fft::FftProcessor;
 use shackhack_dsp::iq::{peak_magnitude, u8_iq_to_complex, ComplexSample};
 use shackhack_dsp::sweep::{Mode, SweepConfig, Sweeper};
 use shackhack_dsp::vfo::{DemodKind, Vfo, VFO_COUNT};
-use shackhack_dsp::window::window_contains;
+use shackhack_dsp::window::{clamp_lo, window_contains};
 
 use crate::source::{IqSource, SourceKind};
 
@@ -258,6 +258,16 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                             Command::SetRange { min_hz, max_hz } => {
                                 sweeper.cfg.min_hz = min_hz;
                                 sweeper.cfg.max_hz = max_hz.max(min_hz + sweeper.cfg.step_hz);
+                                if sweeper.freq_hz < sweeper.cfg.min_hz
+                                    || sweeper.freq_hz > sweeper.cfg.max_hz
+                                {
+                                    sweeper.freq_hz = sweeper.cfg.min_hz;
+                                    sweeper.prev_freq_hz = sweeper.freq_hz;
+                                }
+                                vfos[0].freq_hz = sweeper.freq_hz as f64;
+                                lo = sweeper.needed_lo(sr, tuner_min, tuner_max);
+                                hop_now(&mut source, lo, &mut hop_fade, &mut fade);
+                                sweeper.set_sample_rate(sr);
                             }
                             Command::SetDemod(d) => {
                                 demod = to_kind(d);
@@ -338,7 +348,14 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                     let stepped = sweeper.consume_samples(n);
                     if stepped {
                         vfos[0].freq_hz = sweeper.freq_hz as f64;
-                        if sweeper.needs_hop(lo, sr) {
+                        let span = sweeper.cfg.max_hz.saturating_sub(sweeper.cfg.min_hz);
+                        // A narrow band keeps the LO parked so the walk stays smooth.
+                        // A wide span hops the LO onto each step, or the readout
+                        // sits still for the whole 2.4 MHz window.
+                        if span > 30_000_000 {
+                            lo = clamp_lo(sweeper.freq_hz as f64, tuner_min, tuner_max, sr);
+                            hop_now(&mut source, lo, &mut hop_fade, &mut fade);
+                        } else if sweeper.needs_hop(lo, sr) {
                             lo = sweeper.needed_lo(sr, tuner_min, tuner_max);
                             hop_now(&mut source, lo, &mut hop_fade, &mut fade);
                         }
