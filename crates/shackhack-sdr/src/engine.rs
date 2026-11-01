@@ -251,7 +251,7 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                                 sweeper.cfg.mode = to_mode(m);
                             }
                             Command::SetDwell(ms) => {
-                                sweeper.cfg.dwell_ms = ms.max(5);
+                                sweeper.cfg.dwell_ms = ms.clamp(10, 1000);
                                 sweeper.set_sample_rate(sr);
                             }
                             Command::SetStep(hz) => sweeper.cfg.step_hz = hz.max(1),

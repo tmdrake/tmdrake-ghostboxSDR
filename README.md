@@ -125,7 +125,7 @@ The scan starts on open. **Stop scan** means it is already moving. **Start scan*
 - **Full range** — sweep from the lowest frequency this stick can tune to the highest. This E4000 is about **52–1700 MHz**. A generic R820T is about **24–1766 MHz**. A Blog V4 starts at **500 kHz**. The LO hops on every step. Dwell and demod are left as you set them. If the step is still under 100 kHz, Full range raises it to 250 kHz so a pass is minutes, not an hour.
 - **Band** — FM, airband, marine, NOAA, GMRS, 70 cm, …
 - **Mode** — bounce, forward, backward, random. Random jumps the LO around. Forward or bounce is the readable sweep.
-- **Dwell** — 10–2000 ms on each step. **Step** — channel spacing in kHz.
+- **Dwell** — 10–1000 ms on each step (1 second at the top). **Step** — channel spacing in kHz.
 - **Gain** — RF gain in dB. **Vol** and **Mute**. **SIG** — audio-RMS LED bar (green → amber → red).
 - Click the spectrum while scanning to **park V2**. Stop the scan, then click to tune **V1**.
 

@@ -70,7 +70,7 @@ impl Settings {
                 "volume" => s.volume = v.parse().unwrap_or(s.volume),
                 "mute" => s.mute = v == "1" || v.eq_ignore_ascii_case("true"),
                 "scanning" => s.scanning = v != "0" && !v.eq_ignore_ascii_case("false"),
-                "dwell_ms" => s.dwell_ms = v.parse().unwrap_or(s.dwell_ms),
+                "dwell_ms" => s.dwell_ms = v.parse::<u32>().unwrap_or(s.dwell_ms).clamp(10, 1000),
                 "step_hz" => s.step_hz = v.parse().unwrap_or(s.step_hz),
                 "mode" => s.mode = parse_mode(v),
                 "demod" => s.demod = parse_demod(v),
