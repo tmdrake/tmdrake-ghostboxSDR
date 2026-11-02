@@ -18,6 +18,8 @@ pub struct Settings {
     pub gain_db: f32,
     pub volume: f32,
     pub mute: bool,
+    /// Playback device name. Empty means the Windows default.
+    pub audio_out: String,
     pub scanning: bool,
     pub dwell_ms: u32,
     pub step_hz: u64,
@@ -36,6 +38,7 @@ impl Default for Settings {
             gain_db: 29.6,
             volume: 0.8,
             mute: false,
+            audio_out: String::new(),
             scanning: true,
             dwell_ms: 30,
             step_hz: 150_000,
@@ -69,6 +72,7 @@ impl Settings {
                 "gain_db" => s.gain_db = v.parse().unwrap_or(s.gain_db),
                 "volume" => s.volume = v.parse().unwrap_or(s.volume),
                 "mute" => s.mute = v == "1" || v.eq_ignore_ascii_case("true"),
+                "audio_out" => s.audio_out = v.to_string(),
                 "scanning" => s.scanning = v != "0" && !v.eq_ignore_ascii_case("false"),
                 "dwell_ms" => s.dwell_ms = v.parse::<u32>().unwrap_or(s.dwell_ms).clamp(10, 500),
                 "step_hz" => s.step_hz = v.parse().unwrap_or(s.step_hz),
@@ -103,13 +107,14 @@ impl Settings {
             .collect::<Vec<_>>()
             .join(",");
         let text = format!(
-            "preset={}\nmin_mhz={}\nmax_mhz={}\ngain_db={}\nvolume={}\nmute={}\nscanning={}\ndwell_ms={}\nstep_hz={}\nmode={}\ndemod={}\nvfo_on={on}\nvfo_mix={mix}\n",
+            "preset={}\nmin_mhz={}\nmax_mhz={}\ngain_db={}\nvolume={}\nmute={}\naudio_out={}\nscanning={}\ndwell_ms={}\nstep_hz={}\nmode={}\ndemod={}\nvfo_on={on}\nvfo_mix={mix}\n",
             self.preset_id,
             self.min_mhz,
             self.max_mhz,
             self.gain_db,
             self.volume,
             if self.mute { "1" } else { "0" },
+            self.audio_out,
             if self.scanning { "1" } else { "0" },
             self.dwell_ms,
             self.step_hz,

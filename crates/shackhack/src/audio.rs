@@ -8,6 +8,7 @@ use shackhack_dsp::AUDIO_RATE;
 
 pub struct AudioOut {
     _stream: cpal::Stream,
+    pub device_name: String,
 }
 
 struct Pace {
@@ -18,16 +19,36 @@ struct Pace {
 }
 
 impl AudioOut {
-    pub fn start(queue: Arc<Mutex<VecDeque<f32>>>) -> anyhow::Result<Self> {
+    /// Playback devices, including virtual cables. Names match the Windows sound list.
+    pub fn output_devices() -> Vec<String> {
         let host = cpal::default_host();
-        let device = host
-            .default_output_device()
-            .ok_or_else(|| anyhow::anyhow!("no audio output device"))?;
+        let Ok(devs) = host.output_devices() else {
+            return Vec::new();
+        };
+        let mut names = Vec::new();
+        for dev in devs {
+            if let Ok(name) = dev.name() {
+                if !names.contains(&name) {
+                    names.push(name);
+                }
+            }
+        }
+        names
+    }
+
+    /// `preferred` is a device name such as `CABLE Input (VB-Audio Virtual Cable)`.
+    /// An empty or missing name uses the Windows default playback device.
+    pub fn start(
+        queue: Arc<Mutex<VecDeque<f32>>>,
+        preferred: Option<&str>,
+    ) -> anyhow::Result<Self> {
+        let host = cpal::default_host();
+        let (device, device_name) = pick_device(&host, preferred)?;
         let config = device.default_output_config()?;
         let channels = config.channels() as usize;
         let device_rate = config.sample_rate().0 as f64;
         let format = config.sample_format();
-        eprintln!("audio output: {device_rate} Hz, {channels} ch, {format:?}");
+        eprintln!("audio output: {device_name} @ {device_rate} Hz, {channels} ch, {format:?}");
         let pace = Arc::new(Mutex::new(Pace {
             step: AUDIO_RATE / device_rate,
             frac: 0.0,
@@ -67,8 +88,33 @@ impl AudioOut {
             other => anyhow::bail!("unsupported sample format {other}"),
         };
         stream.play()?;
-        Ok(Self { _stream: stream })
+        Ok(Self {
+            _stream: stream,
+            device_name,
+        })
     }
+}
+
+fn pick_device(
+    host: &cpal::Host,
+    preferred: Option<&str>,
+) -> anyhow::Result<(cpal::Device, String)> {
+    if let Some(want) = preferred.map(str::trim).filter(|s| !s.is_empty()) {
+        if let Ok(devs) = host.output_devices() {
+            for dev in devs {
+                if let Ok(name) = dev.name() {
+                    if name == want {
+                        return Ok((dev, name));
+                    }
+                }
+            }
+        }
+    }
+    let device = host
+        .default_output_device()
+        .ok_or_else(|| anyhow::anyhow!("no audio output device"))?;
+    let name = device.name().unwrap_or_else(|_| "Default".into());
+    Ok((device, name))
 }
 
 fn fill(

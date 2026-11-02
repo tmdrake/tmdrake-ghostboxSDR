@@ -29,6 +29,7 @@ pub struct ShackHackApp {
     spec_avg: Vec<f32>,
     spec_peak: Vec<f32>,
     spec_lut: Option<egui::TextureHandle>,
+    audio_label: String,
     settings: Settings,
     driver_note: Option<String>,
     driver_events: std::sync::mpsc::Receiver<String>,
@@ -40,7 +41,12 @@ impl ShackHackApp {
         let radio = shackhack_sdr::start(kind);
         let settings = Settings::load();
         settings.push(&radio);
-        let audio = AudioOut::start(radio.audio.clone()).ok();
+        let prefer = preferred_audio(&settings);
+        let audio = AudioOut::start(radio.audio.clone(), prefer).ok();
+        let audio_label = audio
+            .as_ref()
+            .map(|a| a.device_name.clone())
+            .unwrap_or_else(|| "no audio".into());
         Self {
             radio,
             _audio: audio,
@@ -57,11 +63,30 @@ impl ShackHackApp {
             spec_avg: Vec::new(),
             spec_peak: Vec::new(),
             spec_lut: None,
+            audio_label,
             settings,
             driver_note: None,
             driver_events: spawn_driver_check(kind),
         }
     }
+}
+
+fn preferred_audio(settings: &Settings) -> Option<&str> {
+    let name = settings.audio_out.trim();
+    if name.is_empty() {
+        None
+    } else {
+        Some(name)
+    }
+}
+
+fn short_out(name: &str) -> String {
+    const MAX: usize = 28;
+    if name.chars().count() <= MAX {
+        return name.to_string();
+    }
+    let cut = name.chars().take(MAX - 1).collect::<String>();
+    format!("{cut}…")
 }
 
 fn spawn_driver_check(kind: SourceKind) -> std::sync::mpsc::Receiver<String> {
@@ -363,6 +388,21 @@ impl ShackHackApp {
                 }
             }
             ui.separator();
+            ui.label("Out");
+            let shown = short_out(&self.audio_label);
+            egui::ComboBox::from_id_salt("audio_out")
+                .selected_text(shown)
+                .show_ui(ui, |ui| {
+                    for name in AudioOut::output_devices() {
+                        let on = name == self.audio_label;
+                        if ui.selectable_label(on, &name).clicked() {
+                            self.settings.audio_out = name;
+                            self.settings.save();
+                            self.reopen_audio();
+                        }
+                    }
+                });
+            ui.separator();
             ui.label(RichText::new("SIG").monospace().color(PHOSPHOR_DIM));
             theme::emf_bar(ui, snap.audio_rms);
             ui.label("Vol");
@@ -459,6 +499,19 @@ impl ShackHackApp {
                 );
             });
         });
+    }
+
+    fn reopen_audio(&mut self) {
+        let prefer = preferred_audio(&self.settings);
+        match AudioOut::start(self.radio.audio.clone(), prefer) {
+            Ok(out) => {
+                self.audio_label = out.device_name.clone();
+                self._audio = Some(out);
+            }
+            Err(err) => {
+                self.driver_note = Some(format!("Audio output failed: {err}"));
+            }
+        }
     }
 
     fn listen(&mut self) {

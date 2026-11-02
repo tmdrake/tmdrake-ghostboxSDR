@@ -170,6 +170,7 @@ The scan starts on open. **Stop scan** means it is already moving. **Start scan*
 - **Band** — FM, airband, marine, NOAA, GMRS, 70 cm, …
 - **Mode** — bounce, forward, backward, random. Random jumps the LO around. Forward or bounce is the readable sweep.
 - **Dwell** — 10–500 ms on each step. **Step** — channel spacing in kHz.
+- **Out** — playback device. Pick **CABLE Input (VB-Audio Virtual Cable)** to feed StreamYard. StreamYard's mic is **CABLE Output**, the other end of that cable. The choice is saved.
 - **Gain** — RF gain in dB. **Vol** and **Mute**. **SIG** — audio-RMS LED bar (green → amber → red).
 - Click the spectrum while scanning to **park V2**. Stop the scan, then click to tune **V1**.
 
