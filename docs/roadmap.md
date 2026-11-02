@@ -9,7 +9,7 @@ Drake's Box SDR v1 is a Windows desktop ghost box: analog AM/NFM/WFM, parked RTL
 - Listen parks V1 on a typed frequency. Full range sweeps the stick's real limits, hopping the LO each step.
 - Spectrum is an averaged 45 dB window with peak-hold, so weak carriers stay visible.
 - WinUSB on Bulk-In Interface 0, opened at startup when `-Check` prints `NEED`
-- Terratec `0CCD:00D7` is an E4000 (`vendor/rs-rtl/src/e4k.rs`), gain 0–70 dB
+- Terratec `0CCD:00D7` is an E4000 (`vendor/rs-rtl/src/e4k.rs`). The slider is the LNA plus mixer, −1.0 to 42.0 dB. A hop writes the PLL, the band, and the RF filter.
 - `--synth` when no dongle is attached
 - GitHub CI on Ubuntu (fmt, test, clippy) so the crates already build on Linux
 

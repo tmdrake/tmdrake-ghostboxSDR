@@ -371,7 +371,14 @@ pub fn start(kind: SourceKind) -> RadioHandle {
 
                 let vol = if mute { 0.0 } else { volume };
                 let mut mix_buf: Vec<f32> = Vec::new();
-                for v in &mut vfos {
+                for (i, v) in vfos.iter_mut().enumerate() {
+                    // While the scan is stopped, only the tuned channel plays.
+                    // The other VFOs sit on neighboring stations, and each one
+                    // turns its own audio up, so leaving them in sounds like
+                    // several radios at once.
+                    if !sweeping && i != 0 && !v.parked {
+                        continue;
+                    }
                     let audio = v.process(&iq, lo, sr, fade * vol);
                     if mix_buf.len() < audio.len() {
                         mix_buf.resize(audio.len(), 0.0);

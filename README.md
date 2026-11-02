@@ -49,6 +49,41 @@ The stick captures **~2.4 MHz at once**. The eight VFOs are software slices of t
 
 Retuning on every small step would click, so a short band keeps the hardware LO still and hops only when V1 walks off the usable 80%. A wide span hops every step instead. Either hop drops 1–2 USB buffers and fades audio for a few milliseconds. 10% of each edge is cropped for tuner rolloff.
 
+## Tuning
+
+At 2.4 MS/s the capture is 2.4 MHz wide. Each edge crops 10%, so a station has to stay inside **LO ± 960 kHz**. Sweeping up, a hop places the LO **840 kHz above** V1 (960 kHz of usable half-width, minus a 120 kHz margin). The walk then runs almost 1.7 MHz before the next click. Sweeping down mirrors that. Random, and any span wider than 30 MHz, centers the LO on the step.
+
+Listen on **95.5 MHz** while the sweep is heading up does not center the dial. It uses the same rule, so the LO lands on **96.340 MHz** and 95.5 sits just inside the low edge.
+
+```mermaid
+flowchart TD
+  step["V1 steps, or Listen"] --> wide{"Span wider than 30 MHz?"}
+  wide -->|yes| center["Center the LO on this step"]
+  wide -->|no| inside{"V1 inside LO ± 960 kHz?"}
+  inside -->|yes| stay["Leave the LO parked"]
+  inside -->|no| dir{"Sweep direction"}
+  dir -->|up| up["LO = freq + 840 kHz"]
+  dir -->|down| down["LO = freq − 840 kHz"]
+  dir -->|random| mid["LO = freq"]
+  center --> clamp["Clamp the window inside the tuner"]
+  up --> clamp
+  down --> clamp
+  mid --> clamp
+  clamp --> chip{"Tuner"}
+  chip -->|R820T| r82["Write that tuner's PLL and IF"]
+  chip -->|E4000| e4k["PLL, clear band bits, write band and RF filter"]
+  e4k --> zif["RTL2832 mixer stays at 0 Hz"]
+  r82 --> fade["Drop 1–2 USB buffers, fade the audio"]
+  zif --> fade
+  stay --> audio["Software VFOs in this window"]
+  fade --> audio
+  audio --> scan{"Scan running?"}
+  scan -->|yes| mix["Mix every enabled VFO"]
+  scan -->|no| solo["Play V1, plus any VFO you parked"]
+```
+
+The E4000 IF filters are not rewritten on every hop. Opening the dongle sets them to the sample rate (about 2.4 MHz) and leaves the chip in zero-IF. FM is VHF, so the RF filter on that hop is the VHF slot. The stick's own range is about **52–1700 MHz**.
+
 ## Hardware floor (no upconverter)
 
 | Stick | Range |
@@ -70,7 +105,7 @@ Typical cheap kit:
 The **Gain** slider is manual. Tuner AGC stays off.
 
 - **R820T / R820T2:** about **0–49.6 dB**, snapped to the tuner's real steps. Start around **25–30 dB**.
-- **E4000** (this Terratec `0ccd:00d7`): about **0–70 dB**, split across the LNA, mixer, and IF stages. A weak location wants the slider up around **40–60 dB**. The old single-register cap near 30 dB was not enough.
+- **E4000** (this Terratec `0ccd:00d7`): slider steps from **−1.0 to 42.0 dB**. That number is the LNA plus the mixer. The six IF stages stay at the fixed moderate setting and are not on the slider. Broadcast FM on this stick was clean around **11.5 dB**. The default **29.6 dB** is the weak-signal mark and will overload a local station.
 - If the waterfall pins solid hot-white or you see **OVERLOAD**, drop gain. A pinned trace hides weak stations the same way too little gain does.
 
 ## Windows driver (WinUSB package)

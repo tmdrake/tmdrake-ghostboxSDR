@@ -20,7 +20,7 @@ The USB product string on that unit was `RTL2838UHIDIR`. The tuner behind it is 
 
 E4000 check: I2C address `0xc8`, register `0x02` reads `0x40`. It is zero-IF. The app clamps it to about **52 MHz–1700 MHz**. FM broadcast is in range. HF and the generic R820T floor of ~24 MHz are not.
 
-Manual gain is **0–70 dB**, split across the LNA (first 25 dB, 5 dB steps), a 6 dB mixer step, and six IF stages (up to 9 dB each). The slider snaps to 5 dB marks. AGC is forced off. A weak site wants about 40–60 dB. The **Full range** control in the app sweeps this whole clamp, and on a span wider than 30 MHz the LO retunes every dwell.
+Manual gain steps are **−1.0 to 42.0 dB** (LNA plus mixer). The six IF stages stay at a fixed moderate gain and are not on the slider. AGC is forced off. A local FM station was clean near **11.5 dB**; the default **29.6 dB** is for a weak signal and overloads that same station. Each hop writes the PLL, then the band bits and the RF filter. The IF filters are set once, to the sample rate. The **Full range** control sweeps this whole clamp, and on a span wider than 30 MHz the LO retunes every dwell.
 
 R820T / R820T2 stays the usual cheap stick (`0bda:2838`). R828D is the Blog V4 path and is the one that can do HF. Do not treat every `0bda` device as a radio. Realtek Wi-Fi uses the same vendor id and other product ids.
 
