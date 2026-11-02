@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 620" role="img" aria-label="Drake's Box SDR spirit box signal path from a cheap RTL-SDR to NV waterfall and speakers">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 620" role="img" aria-label="Drake's Box SDR spirit box signal path from a cheap RTL-SDR to the waterfall and speakers">
   <title>DRAKE'S BOX SDR — cheap RTL-SDR signal path</title>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
@@ -108,7 +108,7 @@
     <rect width="138" height="68" rx="2" fill="#060c08" stroke="#004620"/>
     <text x="69" y="42" text-anchor="middle" fill="#beffd2" font-family="Consolas, ui-monospace, monospace" font-size="13" font-weight="600">Speakers</text>
     <rect y="82" width="138" height="68" rx="2" fill="#060c08" stroke="#00ff6a"/>
-    <text x="69" y="124" text-anchor="middle" fill="#00ff6a" font-family="Consolas, ui-monospace, monospace" font-size="13" font-weight="600">NV waterfall</text>
+    <text x="69" y="124" text-anchor="middle" fill="#00ff6a" font-family="Consolas, ui-monospace, monospace" font-size="13" font-weight="600">Waterfall</text>
   </g>
 
   <text x="36" y="524" fill="#288c46" font-family="Consolas, ui-monospace, monospace" font-size="11" letter-spacing="1.6">DEFAULT SHACK-HACK</text>

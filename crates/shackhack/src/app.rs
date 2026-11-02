@@ -1,10 +1,12 @@
 use crate::audio::AudioOut;
-use crate::theme::{self, PHOSPHOR, PHOSPHOR_DIM, PHOSPHOR_HOT, SCOPE, VOID};
+use crate::theme::{self, PHOSPHOR, PHOSPHOR_DIM, PHOSPHOR_HOT, VOID};
+use eframe::egui::epaint::Vertex;
 use eframe::egui::{
-    self, Align, Color32, FontId, PointerButton, Pos2, Rect, RichText, Sense, Stroke, Ui, Vec2,
+    self, Align, Color32, FontId, Mesh, PointerButton, Pos2, Rect, RichText, Sense, Stroke, Ui,
+    Vec2,
 };
 use shackhack_bands::{self, BandPreset, Demod, SweepMode};
-use shackhack_dsp::colormap::db_to_color;
+use shackhack_dsp::colormap::{db_to_color, sharp};
 
 use shackhack_dsp::vfo::{DemodKind, VFO_COUNT};
 use shackhack_sdr::{Command, RadioHandle, SourceKind};
@@ -26,6 +28,7 @@ pub struct ShackHackApp {
     tune_mhz: f64,
     spec_avg: Vec<f32>,
     spec_peak: Vec<f32>,
+    spec_lut: Option<egui::TextureHandle>,
     settings: Settings,
     driver_note: Option<String>,
     driver_events: std::sync::mpsc::Receiver<String>,
@@ -53,6 +56,7 @@ impl ShackHackApp {
             tune_mhz: 95.5,
             spec_avg: Vec::new(),
             spec_peak: Vec::new(),
+            spec_lut: None,
             settings,
             driver_note: None,
             driver_events: spawn_driver_check(kind),
@@ -570,8 +574,17 @@ impl ShackHackApp {
     }
 
     fn paint_spectrum(&mut self, ui: &mut Ui, rect: Rect, snap: &shackhack_sdr::Snapshot) {
+        if self.spec_lut.is_none() {
+            self.spec_lut = Some(ui.ctx().load_texture(
+                "sdr-spectrum",
+                spectrum_lut(),
+                egui::TextureOptions::LINEAR,
+            ));
+        }
+        let lut = self.spec_lut.as_ref().unwrap().id();
         let painter = ui.painter_at(rect);
-        painter.rect_filled(rect, 0.0, SCOPE);
+        // SDR# dark analyzer: black plot, gray grid, power gradient under the trace.
+        painter.rect_filled(rect, 0.0, Color32::BLACK);
         let plot = Rect::from_min_max(
             Pos2::new(rect.left() + 46.0, rect.top() + 18.0),
             Pos2::new(rect.right() - 8.0, rect.bottom() - 20.0),
@@ -580,7 +593,8 @@ impl ShackHackApp {
         // Fixed 45 dB window above the noise. A weak carrier stays visible
         // when a stronger one is also in the span.
         let ceil = floor + 45.0;
-        let grid = Color32::from_rgb(0, 70, 32);
+        let grid = Color32::from_rgb(58, 58, 58);
+        let axis = Color32::from_rgb(186, 186, 186);
         for i in 0..=4 {
             let t = i as f32 / 4.0;
             let y = plot.bottom() - t * plot.height();
@@ -591,7 +605,7 @@ impl ShackHackApp {
                 egui::Align2::LEFT_CENTER,
                 format!("{db:.0}"),
                 FontId::monospace(10.0),
-                PHOSPHOR_DIM,
+                axis,
             );
         }
         let start_hz = snap.lo_hz - snap.sample_rate * 0.5;
@@ -604,35 +618,67 @@ impl ShackHackApp {
                 egui::Align2::CENTER_BOTTOM,
                 format!("{:.2}", hz / 1e6),
                 FontId::monospace(10.0),
-                PHOSPHOR_DIM,
+                axis,
             );
         }
         if self.spec_avg.len() >= 8 {
-            let n = self.spec_avg.len();
-            let mut hold = Vec::with_capacity(n);
-            let mut pts = Vec::with_capacity(n);
-            for i in 0..n {
-                let x = plot.left() + i as f32 / (n - 1) as f32 * plot.width();
-                let t_hold = ((self.spec_peak[i] - floor) / (ceil - floor)).clamp(0.0, 1.0);
-                let t = ((self.spec_avg[i] - floor) / (ceil - floor)).clamp(0.0, 1.0);
-                hold.push(Pos2::new(x, plot.bottom() - t_hold * plot.height()));
-                pts.push(Pos2::new(x, plot.bottom() - t * plot.height()));
+            let cols = (plot.width().round() as usize).clamp(2, self.spec_avg.len());
+            let span = (ceil - floor).max(1.0);
+            let bottom = plot.bottom();
+            let height = plot.height();
+            let mut xs = Vec::with_capacity(cols);
+            let mut ys = Vec::with_capacity(cols);
+            let mut ts = Vec::with_capacity(cols);
+            let mut hold = Vec::with_capacity(cols);
+            for i in 0..cols {
+                let db = pooled(&self.spec_avg, i, cols);
+                let pk = pooled(&self.spec_peak, i, cols);
+                let t = ((db - floor) / span).clamp(0.0, 1.0);
+                let t_pk = ((pk - floor) / span).clamp(0.0, 1.0);
+                let x = plot.left() + i as f32 / (cols - 1) as f32 * plot.width();
+                xs.push(x);
+                ys.push(bottom - t * height);
+                ts.push(t);
+                hold.push(Pos2::new(x, bottom - t_pk * height));
             }
+            // One quad per column. UV follows screen power, so a pixel's color
+            // is the gradient at that dB, not a blend from black to the peak.
+            let mut mesh = Mesh::with_texture(lut);
+            mesh.vertices.reserve((cols - 1) * 4);
+            mesh.indices.reserve((cols - 1) * 6);
+            for i in 0..cols - 1 {
+                let base = mesh.vertices.len() as u32;
+                mesh.vertices.extend_from_slice(&[
+                    Vertex {
+                        pos: Pos2::new(xs[i], ys[i]),
+                        uv: Pos2::new(0.5, 1.0 - ts[i]),
+                        color: Color32::WHITE,
+                    },
+                    Vertex {
+                        pos: Pos2::new(xs[i + 1], ys[i + 1]),
+                        uv: Pos2::new(0.5, 1.0 - ts[i + 1]),
+                        color: Color32::WHITE,
+                    },
+                    Vertex {
+                        pos: Pos2::new(xs[i], bottom),
+                        uv: Pos2::new(0.5, 1.0),
+                        color: Color32::WHITE,
+                    },
+                    Vertex {
+                        pos: Pos2::new(xs[i + 1], bottom),
+                        uv: Pos2::new(0.5, 1.0),
+                        color: Color32::WHITE,
+                    },
+                ]);
+                mesh.add_triangle(base, base + 2, base + 1);
+                mesh.add_triangle(base + 1, base + 2, base + 3);
+            }
+            painter.add(mesh);
+            // spectrumAnalyzer.peakColor in SDR# is yellow (#FFFF00).
             painter.add(egui::Shape::line(
                 hold,
-                Stroke::new(1.0_f32, Color32::from_rgba_unmultiplied(0, 180, 80, 90)),
+                Stroke::new(1.0_f32, Color32::from_rgb(255, 255, 0)),
             ));
-            if pts.len() >= 2 {
-                let mut fill = pts.clone();
-                fill.push(Pos2::new(plot.right(), plot.bottom()));
-                fill.push(Pos2::new(plot.left(), plot.bottom()));
-                painter.add(egui::Shape::convex_polygon(
-                    fill,
-                    Color32::from_rgba_unmultiplied(0, 255, 106, 28),
-                    Stroke::NONE,
-                ));
-            }
-            painter.add(egui::Shape::line(pts, Stroke::new(1.6_f32, PHOSPHOR)));
             self.overlay_vfos(&painter, plot, snap, true);
         }
         theme::hud_frame(&painter, rect, "SPECTRUM");
@@ -666,10 +712,9 @@ impl ShackHackApp {
                 Color32::WHITE,
             );
         } else {
-            ui.painter_at(rect).rect_filled(rect, 0.0, VOID);
+            ui.painter_at(rect).rect_filled(rect, 0.0, Color32::BLACK);
         }
         let painter = ui.painter_at(rect);
-        theme::scanlines(&painter, rect);
         self.overlay_vfos(&painter, rect, snap, false);
         theme::hud_frame(&painter, rect, "WATERFALL");
 
@@ -707,15 +752,26 @@ impl ShackHackApp {
             let bw = v.demod.passband_hz();
             let x0 = hz_to_x(hz - bw * 0.5, rect, snap);
             let x1 = hz_to_x(hz + bw * 0.5, rect, snap);
-            let color = theme::vfo_color(i);
+            // V1 is the white tuning marker. The other VFOs stay colored.
+            let color = if i == 0 {
+                Color32::from_rgb(230, 230, 230)
+            } else {
+                theme::vfo_color(i)
+            };
             if fill {
+                let band = if i == 0 {
+                    Color32::from_rgba_unmultiplied(255, 255, 255, 26)
+                } else {
+                    Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), 28)
+                };
                 painter.rect_filled(
                     Rect::from_min_max(Pos2::new(x0, rect.top()), Pos2::new(x1, rect.bottom())),
                     0.0,
-                    Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), 36),
+                    band,
                 );
             }
-            painter.vline(x, rect.y_range(), Stroke::new(1.5_f32, color));
+            let width = if i == 0 { 1.0 } else { 1.25_f32 };
+            painter.vline(x, rect.y_range(), Stroke::new(width, color));
             let tip = Pos2::new(x, rect.top() + 2.0);
             painter.add(egui::Shape::convex_polygon(
                 vec![
@@ -788,6 +844,36 @@ fn kind_str(d: DemodKind) -> &'static str {
         DemodKind::Nfm => "NFM",
         DemodKind::Am => "AM",
     }
+}
+
+/// 1×256 colormap, hot at the top (uv.y = 0) and the noise floor at the bottom.
+fn spectrum_lut() -> egui::ColorImage {
+    let h = 256;
+    let mut pixels = Vec::with_capacity(h);
+    for row in 0..h {
+        let t = 1.0 - row as f32 / (h - 1) as f32;
+        let c = sharp(t);
+        pixels.push(Color32::from_rgb(c[0], c[1], c[2]));
+    }
+    egui::ColorImage::new([1, h], pixels)
+}
+
+/// Max dB in the bins that land on column `i` of `cols`.
+fn pooled(samples: &[f32], i: usize, cols: usize) -> f32 {
+    let n = samples.len();
+    if n == 0 || cols <= 1 {
+        return samples.first().copied().unwrap_or(-100.0);
+    }
+    let start = i * (n - 1) / (cols - 1);
+    let end = if i + 1 >= cols {
+        n
+    } else {
+        ((i + 1) * (n - 1) / (cols - 1)).max(start + 1)
+    };
+    samples[start..end.min(n)]
+        .iter()
+        .copied()
+        .fold(f32::MIN, f32::max)
 }
 
 fn hz_to_x(hz: f64, rect: Rect, snap: &shackhack_sdr::Snapshot) -> f32 {

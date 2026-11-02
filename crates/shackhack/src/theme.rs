@@ -7,7 +7,6 @@ pub const PHOSPHOR_DIM: Color32 = Color32::from_rgb(40, 140, 70);
 pub const PHOSPHOR_HOT: Color32 = Color32::from_rgb(190, 255, 210);
 pub const VOID: Color32 = Color32::from_rgb(3, 6, 4);
 pub const PANEL: Color32 = Color32::from_rgb(6, 12, 8);
-pub const SCOPE: Color32 = Color32::from_rgb(4, 10, 6);
 pub const AMBER: Color32 = Color32::from_rgb(255, 176, 32);
 pub const ALERT: Color32 = Color32::from_rgb(255, 56, 56);
 pub const CYAN: Color32 = Color32::from_rgb(0, 220, 255);
@@ -104,15 +103,6 @@ pub fn hud_frame(painter: &egui::Painter, rect: Rect, label: &str) {
             FontId::monospace(11.0),
             PHOSPHOR,
         );
-    }
-}
-
-pub fn scanlines(painter: &egui::Painter, rect: Rect) {
-    let mut y = rect.top();
-    let line = Color32::from_rgba_unmultiplied(0, 255, 80, 12);
-    while y < rect.bottom() {
-        painter.hline(rect.x_range(), y, stroke(1.0, line));
-        y += 3.0;
     }
 }
 

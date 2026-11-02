@@ -24,18 +24,16 @@ Default shack-hack: FM broadcast **88–108 MHz**, **WFM**, **150 kHz** steps, *
 
 ## Look
 
-Dark phosphor screen. The spectrum is an averaged trace over a fixed **45 dB** window above the noise, with a faint peak-hold behind it, so a weak carrier stays visible next to a louder one. Under that is the waterfall of the **same LO window**. The **LO** number in the status line is the center of both. V1–V8 are cursors inside that window. V1 is the one you hear. A bright steady line is a station. A fuzzy floor is noise.
+The controls stay night-vision green. The spectrum and the waterfall use the SDR# dark analyzer: a black plot, a gray grid, and a power gradient from black through blue, cyan, green, yellow, and red to white. The trace is an average over a fixed **45 dB** window above the noise, with a yellow peak-hold line, so a weak carrier stays visible next to a louder one. The waterfall is that same LO window and the same gradient. The **LO** number in the status line is the center of both. V1 is the white tuning marker and the station you hear. V2–V8 keep their own colors. A hot column is a station. A blue floor is noise.
 
-![Drake's Box SDR, synth demo, full-range scan](docs/screenshots/radio.png)
+![Drake's Box SDR listening on 95.5 MHz](docs/screenshots/radio.png)
 
-This shot is `shackhack --synth` (no dongle), so the peaks are fake stations. The layout is the live radio.
+This shot is a live stick, scan stopped, V1 parked on **95.500 MHz** WFM. Left to right is the 2.4 MHz window around the LO.
 
-- **LO 1436.460 MHz** is the center of the spectrum and the waterfall. Left to right is about 2.4 MHz around that number.
-- **V1** is the cursor you hear. V2–V8 are the other cursors in the same window. They do not drag the picture with them.
+- **V1** is the white cursor. The shaded band is its passband. V2–V8 are the other cursors in the same window. They do not drag the picture with them.
 - On a short band the LO stays parked, so the waterfall does not slide while the VFOs walk. On **Full range** the LO hops every step. The number changes. New waterfall rows are the new slice. Old rows stay put until they scroll off, so a real station shows a break, not a smooth sideways slide.
-- If the LO number changes and the picture is still the same fuzzy floor, that slice has no carrier. Noise looks the same at every frequency. A station is the bright line that shows up in a new left-right place after the hop.
-- **Dwell** here is **100 ms**. The slider stops at **500 ms**.
-- **Listen** at **95.5** stops the scan and parks V1 there. **Stop scan** means the sweep is already running.
+- If the LO number changes and the picture is still the same blue floor, that slice has no carrier. A station is the hot column that shows up in a new left-right place after the hop.
+- **Listen** stops the scan and parks V1 on the frequency in the tune box. The dwell slider stops at **500 ms**.
 
 ## Diagram — cheap RTL-SDR to speakers
 
@@ -213,7 +211,7 @@ flowchart LR
 | `crates/shackhack-dsp` | FFT, sweeper, AM/NFM/WFM VFOs |
 | `crates/shackhack-bands` | Band table and tuner floors |
 | `docs/diagrams/` | RTL-SDR photo + architecture SVGs |
-| `docs/screenshots/radio.png` | Window grab of the synth demo |
+| `docs/screenshots/radio.png` | Window grab of a live FM listen |
 | `packaging/windows/` | WinUSB bind package (Zadig, no `.sys` to build) |
 | `docs/drivers.md` | Windows WinUSB, E4000, and the Linux/Pi USB notes |
 | `docs/zadig.md` | Short WinUSB click-path |

@@ -7,7 +7,7 @@ pub mod sweep;
 pub mod vfo;
 pub mod window;
 
-pub use colormap::{nv, turbo};
+pub use colormap::{nv, sharp, turbo};
 pub use fft::{FftProcessor, Spectrum};
 pub use iq::{u8_iq_to_complex, ComplexSample};
 pub use sweep::{SweepConfig, Sweeper};
