@@ -304,15 +304,26 @@ impl ShackHackApp {
         });
         ui.horizontal(|ui| {
             ui.label(RichText::new("Gain").strong());
-            let max_g = snap.gains.last().copied().unwrap_or(496) as f32 / 10.0;
-            let min_g = snap.gains.first().copied().unwrap_or(0) as f32 / 10.0;
-            let slider = egui::Slider::new(&mut self.gain_db, min_g..=max_g)
+            let gains_ready = snap.connected && snap.gains.len() > 1;
+            let (min_g, max_g) = if gains_ready {
+                (
+                    snap.gains[0] as f32 / 10.0,
+                    *snap.gains.last().unwrap() as f32 / 10.0,
+                )
+            } else {
+                (0.0, self.gain_db.max(70.0))
+            };
+            let mut shown = self.gain_db;
+            let slider = egui::Slider::new(&mut shown, min_g..=max_g)
                 .suffix(" dB")
                 .show_value(true)
                 .min_decimals(1);
             let resp = ui.add(slider);
-            if resp.changed() {
-                self.settings.gain_db = self.gain_db;
+            // Ignore the clamp that happens before the stick's gain list arrives.
+            // That clamp was saving the default over the stored gain.
+            if gains_ready && resp.changed() && (shown - self.gain_db).abs() > 0.05 {
+                self.gain_db = shown;
+                self.settings.gain_db = shown;
                 self.settings.save();
                 self.radio
                     .send(Command::SetGain((self.gain_db * 10.0).round() as i32));
