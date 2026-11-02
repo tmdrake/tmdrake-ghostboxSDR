@@ -320,7 +320,7 @@ mod tests {
         let mut cos_dot = 0.0f64;
         let mut energy = 0.0f64;
         for (i, &sample) in rest.iter().enumerate() {
-            let t = (skip + i) as f64 / crate::AUDIO_RATE as f64;
+            let t = (skip + i) as f64 / crate::AUDIO_RATE;
             let w = std::f64::consts::TAU * tone * t;
             let a = sample as f64;
             sin_dot += a * w.sin();
