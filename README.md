@@ -171,7 +171,7 @@ The scan starts on open. **Stop scan** means it is already moving. **Start scan*
 - **Mode** — bounce, forward, backward, random. Random jumps the LO around. Forward or bounce is the readable sweep.
 - **Dwell** — 10–500 ms on each step. **Step** — channel spacing in kHz.
 - **Out** — playback device. Pick **CABLE Input (VB-Audio Virtual Cable)** to feed StreamYard. StreamYard's mic is **CABLE Output**, the other end of that cable. The choice is saved.
-- **Gain** — RF gain in dB. **Vol** and **Mute**. **SIG** — audio-RMS LED bar (green → amber → red).
+- **Gain** — RF gain in dB. **AGC** turns the tuner AGC on or off and is saved. Off is the default: **OVERLOAD** means the slider is too high and nothing will turn it down. The slow audio leveler after the demod stays on either way. **Vol** and **Mute**. **SIG** — audio-RMS LED bar (green → amber → red).
 - Click the spectrum while scanning to **park V2**. Stop the scan, then click to tune **V1**.
 
 Settings are restored on the next launch: gain, volume, mute, band, custom range, full range, dwell, step, mode, demod, scan on/off, and each VFO's checkbox and mix.

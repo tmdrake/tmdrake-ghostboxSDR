@@ -85,6 +85,13 @@ impl IqSource {
         }
     }
 
+    pub fn set_gain_auto(&mut self) -> Result<()> {
+        match self {
+            IqSource::Rtl(s) => s.set_gain_auto(),
+            IqSource::Synth(_) => Ok(()),
+        }
+    }
+
     pub fn next_chunk(&mut self) -> Result<Option<Vec<u8>>> {
         match self {
             IqSource::Rtl(s) => s.next_chunk(),
@@ -174,6 +181,15 @@ impl RtlSource {
             c.set_gain(gain)?;
         } else {
             self.sdr.set_gain_manual(gain)?;
+        }
+        Ok(())
+    }
+
+    fn set_gain_auto(&mut self) -> Result<()> {
+        if let Some(c) = &self.control {
+            c.set_gain_auto()?;
+        } else {
+            self.sdr.set_gain_auto()?;
         }
         Ok(())
     }

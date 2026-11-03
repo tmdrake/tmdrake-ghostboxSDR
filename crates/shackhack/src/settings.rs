@@ -16,6 +16,8 @@ pub struct Settings {
     pub min_mhz: f64,
     pub max_mhz: f64,
     pub gain_db: f32,
+    /// Tuner AGC. Off means the Gain slider is in charge.
+    pub tuner_agc: bool,
     pub volume: f32,
     pub mute: bool,
     /// Playback device name. Empty means the Windows default.
@@ -36,6 +38,7 @@ impl Default for Settings {
             min_mhz: 88.0,
             max_mhz: 108.0,
             gain_db: 29.6,
+            tuner_agc: false,
             volume: 0.8,
             mute: false,
             audio_out: String::new(),
@@ -70,6 +73,7 @@ impl Settings {
                 "min_mhz" => s.min_mhz = v.parse().unwrap_or(s.min_mhz),
                 "max_mhz" => s.max_mhz = v.parse().unwrap_or(s.max_mhz),
                 "gain_db" => s.gain_db = v.parse().unwrap_or(s.gain_db),
+                "tuner_agc" => s.tuner_agc = v == "1" || v.eq_ignore_ascii_case("true"),
                 "volume" => s.volume = v.parse().unwrap_or(s.volume),
                 "mute" => s.mute = v == "1" || v.eq_ignore_ascii_case("true"),
                 "audio_out" => s.audio_out = v.to_string(),
@@ -107,11 +111,12 @@ impl Settings {
             .collect::<Vec<_>>()
             .join(",");
         let text = format!(
-            "preset={}\nmin_mhz={}\nmax_mhz={}\ngain_db={}\nvolume={}\nmute={}\naudio_out={}\nscanning={}\ndwell_ms={}\nstep_hz={}\nmode={}\ndemod={}\nvfo_on={on}\nvfo_mix={mix}\n",
+            "preset={}\nmin_mhz={}\nmax_mhz={}\ngain_db={}\ntuner_agc={}\nvolume={}\nmute={}\naudio_out={}\nscanning={}\ndwell_ms={}\nstep_hz={}\nmode={}\ndemod={}\nvfo_on={on}\nvfo_mix={mix}\n",
             self.preset_id,
             self.min_mhz,
             self.max_mhz,
             self.gain_db,
+            if self.tuner_agc { "1" } else { "0" },
             self.volume,
             if self.mute { "1" } else { "0" },
             self.audio_out,
@@ -144,7 +149,11 @@ impl Settings {
         radio.send(Command::SetDwell(self.dwell_ms));
         radio.send(Command::SetStep(self.step_hz));
         radio.send(Command::SetDemod(self.demod));
-        radio.send(Command::SetGain((self.gain_db * 10.0).round() as i32));
+        if self.tuner_agc {
+            radio.send(Command::SetGainAuto(true));
+        } else {
+            radio.send(Command::SetGain((self.gain_db * 10.0).round() as i32));
+        }
         radio.send(Command::SetVolume(self.volume));
         radio.send(Command::SetMute(self.mute));
         radio.send(Command::SetSweeping(self.scanning));

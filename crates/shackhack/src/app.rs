@@ -349,12 +349,32 @@ impl ShackHackApp {
             if gains_ready && resp.changed() && (shown - self.gain_db).abs() > 0.05 {
                 self.gain_db = shown;
                 self.settings.gain_db = shown;
+                self.settings.tuner_agc = false;
                 self.settings.save();
                 self.radio
                     .send(Command::SetGain((self.gain_db * 10.0).round() as i32));
             }
+            if ui
+                .selectable_label(self.settings.tuner_agc, "AGC")
+                .on_hover_text("Tuner AGC. Off leaves the Gain slider in charge.")
+                .clicked()
+            {
+                self.settings.tuner_agc = !self.settings.tuner_agc;
+                self.settings.save();
+                self.radio
+                    .send(Command::SetGainAuto(self.settings.tuner_agc));
+                if !self.settings.tuner_agc {
+                    self.radio
+                        .send(Command::SetGain((self.gain_db * 10.0).round() as i32));
+                }
+            }
             if snap.clip {
-                ui.colored_label(theme::ALERT, "OVERLOAD — drop gain");
+                let msg = if self.settings.tuner_agc {
+                    "OVERLOAD"
+                } else {
+                    "OVERLOAD — AGC off, drop Gain"
+                };
+                ui.colored_label(theme::ALERT, msg);
             }
             ui.separator();
             ui.label("Dwell");

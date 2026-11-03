@@ -34,6 +34,8 @@ pub enum Command {
     },
     SetDemod(Demod),
     SetGain(i32),
+    /// Tuner AGC. Off restores the manual gain slider.
+    SetGainAuto(bool),
     TuneA(u64),
     ParkVfo {
         index: usize,
@@ -278,6 +280,13 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                             Command::SetGain(g) => {
                                 gain = nearest_gain(&info.gains, g);
                                 let _ = source.set_gain(gain);
+                            }
+                            Command::SetGainAuto(on) => {
+                                if on {
+                                    let _ = source.set_gain_auto();
+                                } else {
+                                    let _ = source.set_gain(gain);
+                                }
                             }
                             Command::TuneA(hz) => {
                                 sweeper.freq_hz = hz;
