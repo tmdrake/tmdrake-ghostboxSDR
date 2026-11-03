@@ -253,7 +253,19 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                                 hop_now(&mut source, lo, &mut hop_fade, &mut fade);
                             }
                             Command::SetMode(m) => {
-                                sweeper.cfg.mode = to_mode(m);
+                                let next = to_mode(m);
+                                if sweeper.cfg.mode != next {
+                                    sweeper.set_mode(next);
+                                    // A short band parks the LO on the edge the
+                                    // sweep is walking toward. Wide spans center
+                                    // on the step, so the direction does not move it.
+                                    let span =
+                                        sweeper.cfg.max_hz.saturating_sub(sweeper.cfg.min_hz);
+                                    if span <= 30_000_000 {
+                                        lo = sweeper.needed_lo(sr, tuner_min, tuner_max);
+                                        hop_now(&mut source, lo, &mut hop_fade, &mut fade);
+                                    }
+                                }
                             }
                             Command::SetDwell(ms) => {
                                 sweeper.cfg.dwell_ms = ms.clamp(10, 500);
@@ -263,7 +275,7 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                             Command::SetRange { min_hz, max_hz } => {
                                 sweeper.cfg.min_hz = min_hz;
                                 sweeper.cfg.max_hz = max_hz.max(min_hz + sweeper.cfg.step_hz);
-                                sweeper.restart_up();
+                                sweeper.restart();
                                 vfos[0].freq_hz = sweeper.freq_hz as f64;
                                 lo = clamp_lo(sweeper.freq_hz as f64, tuner_min, tuner_max, sr);
                                 hop_now(&mut source, lo, &mut hop_fade, &mut fade);

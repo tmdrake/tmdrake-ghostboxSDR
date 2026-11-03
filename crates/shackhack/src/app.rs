@@ -266,7 +266,7 @@ impl ShackHackApp {
                     .font(FontId::monospace(22.0))
                     .color(PHOSPHOR),
             );
-            if snap.sweeping {
+            if snap.sweeping && snap.sweep_dir != 0 {
                 let dir = if snap.sweep_dir < 0 { "down" } else { "up" };
                 ui.label(
                     RichText::new(dir)
@@ -647,7 +647,7 @@ impl ShackHackApp {
         let pos = ((sweep_hz - snap.min_hz as f64) / span).clamp(0.0, 1.0);
         let x = rect.left() + pos as f32 * w;
         painter.vline(x, rect.y_range(), Stroke::new(3.0_f32, PHOSPHOR_HOT));
-        let dir = if !snap.sweeping {
+        let dir = if !snap.sweeping || snap.sweep_dir == 0 {
             ""
         } else if snap.sweep_dir < 0 {
             "  down"

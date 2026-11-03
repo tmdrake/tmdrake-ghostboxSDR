@@ -69,12 +69,39 @@ impl Sweeper {
         self.direction
     }
 
-    /// Start at the bottom of the configured span, moving upward.
-    pub fn restart_up(&mut self) {
-        self.freq_hz = self.cfg.min_hz;
+    /// Park at the start of a pass. Forward and bounce start at the bottom
+    /// going up. Backward starts at the top going down.
+    pub fn restart(&mut self) {
+        match self.cfg.mode {
+            Mode::Backward => {
+                self.freq_hz = self.cfg.max_hz.max(self.cfg.min_hz);
+                self.direction = -1;
+            }
+            Mode::Random => {
+                self.freq_hz = self.cfg.min_hz;
+                self.direction = 0;
+            }
+            Mode::Forward | Mode::Bounce => {
+                self.freq_hz = self.cfg.min_hz;
+                self.direction = 1;
+            }
+        }
         self.prev_freq_hz = self.freq_hz;
-        self.direction = 1;
         self.samples_in_dwell = 0;
+    }
+
+    pub fn set_mode(&mut self, mode: Mode) {
+        self.cfg.mode = mode;
+        match mode {
+            Mode::Forward => self.direction = 1,
+            Mode::Backward => self.direction = -1,
+            Mode::Random => self.direction = 0,
+            Mode::Bounce => {
+                if self.direction == 0 {
+                    self.direction = 1;
+                }
+            }
+        }
     }
 
     /// Advance by `n` IQ samples. Returns true when the channel stepped.
@@ -95,18 +122,27 @@ impl Sweeper {
         let max = self.cfg.max_hz.max(min + step);
         match self.cfg.mode {
             Mode::Forward => {
-                let n = self.freq_hz.saturating_add(step);
-                if n > max {
+                self.direction = 1;
+                let cur = self.freq_hz;
+                let next = cur.saturating_add(step);
+                if cur >= max {
                     min
+                } else if next >= max {
+                    max
                 } else {
-                    n
+                    next
                 }
             }
             Mode::Backward => {
-                if self.freq_hz <= min + step {
+                self.direction = -1;
+                let cur = self.freq_hz;
+                let next = cur.saturating_sub(step);
+                if cur <= min {
                     max
+                } else if next <= min {
+                    min
                 } else {
-                    self.freq_hz - step
+                    next
                 }
             }
             Mode::Bounce => bounce_step(self.freq_hz, step, min, max, &mut self.direction),
@@ -208,7 +244,7 @@ mod tests {
             mode: Mode::Bounce,
         };
         let mut s = Sweeper::new(cfg, 2_400_000.0);
-        s.restart_up();
+        s.restart();
         let mut saw_max = false;
         let mut saw_min = false;
         for _ in 0..20_000 {
@@ -230,6 +266,115 @@ mod tests {
         s.consume_samples(0);
         assert_eq!(s.direction(), 1);
         assert!(s.freq_hz > 52_000_000);
+    }
+
+    #[test]
+    fn forward_lands_on_the_top_then_wraps() {
+        let cfg = SweepConfig {
+            min_hz: 52_000_000,
+            max_hz: 1_700_000_000,
+            step_hz: 150_000,
+            dwell_ms: 1,
+            mode: Mode::Forward,
+        };
+        let mut s = Sweeper::new(cfg, 2_400_000.0);
+        s.restart();
+        let mut saw_max = false;
+        for _ in 0..20_000 {
+            s.samples_in_dwell = s.dwell_samples;
+            s.consume_samples(0);
+            if s.freq_hz == 1_700_000_000 {
+                saw_max = true;
+                assert_eq!(s.direction(), 1);
+                break;
+            }
+        }
+        assert!(saw_max, "forward never landed on the top");
+        s.samples_in_dwell = s.dwell_samples;
+        s.consume_samples(0);
+        assert_eq!(s.freq_hz, 52_000_000);
+    }
+
+    #[test]
+    fn backward_lands_on_the_bottom_then_wraps() {
+        let cfg = SweepConfig {
+            min_hz: 52_000_000,
+            max_hz: 1_700_000_000,
+            step_hz: 250_000,
+            dwell_ms: 1,
+            mode: Mode::Backward,
+        };
+        let mut s = Sweeper::new(cfg, 2_400_000.0);
+        s.restart();
+        assert_eq!(s.freq_hz, 1_700_000_000);
+        assert_eq!(s.direction(), -1);
+        let mut saw_min = false;
+        for _ in 0..20_000 {
+            s.samples_in_dwell = s.dwell_samples;
+            s.consume_samples(0);
+            if s.freq_hz == 52_000_000 {
+                saw_min = true;
+                assert_eq!(s.direction(), -1);
+                break;
+            }
+        }
+        assert!(saw_min, "backward never landed on the bottom");
+        s.samples_in_dwell = s.dwell_samples;
+        s.consume_samples(0);
+        assert_eq!(s.freq_hz, 1_700_000_000);
+        assert_eq!(s.direction(), -1);
+    }
+
+    #[test]
+    fn forward_and_backward_hit_an_unaligned_end() {
+        let mut up = Sweeper::new(
+            SweepConfig {
+                min_hz: 100,
+                max_hz: 125,
+                step_hz: 10,
+                dwell_ms: 1,
+                mode: Mode::Forward,
+            },
+            1000.0,
+        );
+        let mut saw_top = false;
+        for _ in 0..20 {
+            up.samples_in_dwell = up.dwell_samples;
+            up.consume_samples(0);
+            if up.freq_hz == 125 {
+                saw_top = true;
+                break;
+            }
+        }
+        assert!(saw_top);
+        up.samples_in_dwell = up.dwell_samples;
+        up.consume_samples(0);
+        assert_eq!(up.freq_hz, 100);
+
+        let mut down = Sweeper::new(
+            SweepConfig {
+                min_hz: 100,
+                max_hz: 130,
+                step_hz: 10,
+                dwell_ms: 1,
+                mode: Mode::Backward,
+            },
+            1000.0,
+        );
+        down.freq_hz = 130;
+        let mut saw_bottom = false;
+        for _ in 0..20 {
+            down.samples_in_dwell = down.dwell_samples;
+            down.consume_samples(0);
+            if down.freq_hz == 100 {
+                saw_bottom = true;
+                break;
+            }
+        }
+        assert!(saw_bottom);
+        down.samples_in_dwell = down.dwell_samples;
+        down.consume_samples(0);
+        assert_eq!(down.freq_hz, 130);
     }
 
     #[test]
