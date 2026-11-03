@@ -168,7 +168,7 @@ The scan starts on open. **Stop scan** means it is already moving. **Start scan*
 - **Listen** — type a frequency (the box opens on **95.5**) and park **V1** there. The scan stops, mute turns off, and a broadcast-FM frequency forces wide FM. The LO hops so that frequency is in the window.
 - **Full range** — sweep from the lowest frequency this stick can tune to the highest. This E4000 is about **52–1700 MHz**. A generic R820T is about **24–1766 MHz**. A Blog V4 starts at **500 kHz**. The LO hops on every step. Bounce starts at the bottom and turns around at both ends. The white mark on the range bar is the sweep. Dwell and demod stay as you set them. The step is raised so one direction takes about a minute and a half (hops stay within 2 MHz), unless the step you already set finishes a pass in under three minutes.
 - **Band** — FM, airband, marine, NOAA, GMRS, 70 cm, …
-- **Mode** — bounce, forward, backward, random. Random jumps the LO around. Forward or bounce is the readable sweep.
+- **Mode** — bounce, forward, backward, random. Bounce turns around at both ends. Forward and backward sit on the far end, then wrap. Random jumps. The rules are in [docs/sweep.md](docs/sweep.md).
 - **Dwell** — 10–500 ms on each step. **Step** — channel spacing in kHz.
 - **Out** — playback device. Pick **CABLE Input (VB-Audio Virtual Cable)** to feed StreamYard. StreamYard's mic is **CABLE Output**, the other end of that cable. The choice is saved.
 - **Gain** — RF gain in dB. **AGC** turns the tuner AGC on or off and is saved. Off is the default: **OVERLOAD** means the slider is too high and nothing will turn it down. The slow audio leveler after the demod stays on either way. **Vol** and **Mute**. **SIG** — audio-RMS LED bar (green → amber → red).
@@ -217,11 +217,12 @@ flowchart LR
 | `docs/drivers.md` | Windows WinUSB, E4000, and the Linux/Pi USB notes |
 | `docs/zadig.md` | Short WinUSB click-path |
 | `docs/bands.md` | Preset notes |
+| `docs/sweep.md` | Bounce, forward, backward, and full range. The Linux port keeps this. |
 | `docs/roadmap.md` | Linux desktop, then Raspberry Pi 4/5 |
 
 ## Later
 
-Windows is the v1 machine. Driver notes for that machine and for a later Pi 4/5 port are in [docs/drivers.md](docs/drivers.md). The order of work is in [docs/roadmap.md](docs/roadmap.md).
+Windows is the v1 machine. Driver notes for that machine and for a later Pi 4/5 port are in [docs/drivers.md](docs/drivers.md). The order of work is in [docs/roadmap.md](docs/roadmap.md). The sweep the port has to keep is in [docs/sweep.md](docs/sweep.md).
 
 ## Disclaimer
 

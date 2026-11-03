@@ -6,7 +6,7 @@ Drake's Box SDR v1 is a Windows desktop ghost box: analog AM/NFM/WFM, parked RTL
 
 - Windows GUI via `Start.vbs` / `run.cmd`. The sweep starts on open.
 - Controls persist in the settings file (dwell, gain, band, full range, VFOs).
-- Listen parks V1 on a typed frequency. Full range sweeps the stick's real limits, hopping the LO each step.
+- Listen parks V1 on a typed frequency. Full range sweeps the stick's real limits, hopping the LO each step. Bounce, forward, and backward land on both ends of the span. The contract is [sweep.md](sweep.md).
 - Spectrum is an averaged 45 dB window with peak-hold, so weak carriers stay visible.
 - WinUSB on Bulk-In Interface 0, opened at startup when `-Check` prints `NEED`
 - Terratec `0CCD:00D7` is an E4000 (`vendor/rs-rtl/src/e4k.rs`). The slider is the LNA plus mixer, −1.0 to 42.0 dB. A hop writes the PLL, the band, and the RF filter.
@@ -18,10 +18,11 @@ Drake's Box SDR v1 is a Windows desktop ghost box: analog AM/NFM/WFM, parked RTL
 The radio crates do not call WinUSB. `rs-rtl` talks USB through `nusb`, and audio is `cpal`.
 
 1. Add `packaging/linux/`: a udev rule for every id in `KNOWN_RTL_IDS`, plus a modprobe blacklist for `dvb_usb_rtl28xxu`. See [drivers.md](drivers.md). No Zadig and no `.sys`.
-2. Confirm `cargo run -p shackhack -- --synth` on Ubuntu, then a live stick (R820T and the E4000).
-3. Move that same userspace build to 64-bit Raspberry Pi OS on a Pi 4 or Pi 5. Audio out the headphone jack or HDMI.
-4. If `wgpu` fails on the Pi GPU, switch that binary to `glow` before rewriting the UI.
-5. A disk image can wait until that desktop build is boring.
+2. Keep the sweep in [sweep.md](sweep.md). `cargo test -p shackhack-dsp -- sweep::` is the check, before any UI change. Do not write a second walker for Linux.
+3. Confirm `cargo run -p shackhack -- --synth` on Ubuntu, then a live stick (R820T and the E4000).
+4. Move that same userspace build to 64-bit Raspberry Pi OS on a Pi 4 or Pi 5. Audio out the headphone jack or HDMI.
+5. If `wgpu` fails on the Pi GPU, switch that binary to `glow` before rewriting the UI.
+6. A disk image can wait until that desktop build is boring.
 
 The bench board from 2014 (Model B / B+, 512 MB, one ARM11) with a Waveshare GPIO screen is recorded in [drivers.md](drivers.md). It is not this port. A Pi 3 and an unpowered hub stay out of scope.
 

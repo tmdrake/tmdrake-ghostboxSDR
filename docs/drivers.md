@@ -89,7 +89,7 @@ A 2014 board (Model B or Model B+, one 700 MHz ARM11, 512 MB, no NEON) plus a Wa
 
 The port target is a **Pi 4 or Pi 5**, 64-bit Raspberry Pi OS, a powered USB port, and a display at least about 1024×600. Prove `--synth` there before a live stick. Live IQ is 2.4 MS/s, about 4.8 MB/s of samples, plus the FFT and eight VFOs. Watch dropped USB buffers. A Pi 3 and an unpowered hub stay out of scope.
 
-Order of work when the port starts: Linux desktop udev and the DVB blacklist, then the same image on a Pi 4/5, then audio, then the GPU backend if `wgpu` misbehaves. The E4000 and R820T code is already in the crate. It does not get a second Windows-style installer.
+Order of work when the port starts: Linux desktop udev and the DVB blacklist, then the same image on a Pi 4/5, then audio, then the GPU backend if `wgpu` misbehaves. The E4000 and R820T code is already in the crate. It does not get a second Windows-style installer. The sweep is the same contract on every OS. It is written up in [sweep.md](sweep.md), and the port does not grow a second copy of it.
 
 ## What we still do not build
 
