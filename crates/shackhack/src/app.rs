@@ -7,6 +7,7 @@ use eframe::egui::{
 };
 use shackhack_bands::{self, BandPreset, Demod, SweepMode};
 use shackhack_dsp::colormap::{db_to_color, sharp};
+use shackhack_dsp::sweep::full_range_step;
 
 use shackhack_dsp::vfo::{DemodKind, VFO_COUNT};
 use shackhack_sdr::{Command, RadioHandle, SourceKind};
@@ -265,6 +266,15 @@ impl ShackHackApp {
                     .font(FontId::monospace(22.0))
                     .color(PHOSPHOR),
             );
+            if snap.sweeping {
+                let dir = if snap.sweep_dir < 0 { "down" } else { "up" };
+                ui.label(
+                    RichText::new(dir)
+                        .monospace()
+                        .size(14.0)
+                        .color(PHOSPHOR_DIM),
+                );
+            }
             ui.label(
                 RichText::new(kind_str(snap.demod))
                     .monospace()
@@ -557,9 +567,9 @@ impl ShackHackApp {
         self.settings.preset_id = "full".into();
         self.settings.min_mhz = self.custom_min_mhz;
         self.settings.max_mhz = self.custom_max_mhz;
-        if self.settings.step_hz < 100_000 {
-            self.settings.step_hz = 250_000;
-        }
+        let span = max.saturating_sub(min);
+        self.settings.step_hz =
+            full_range_step(span, self.settings.dwell_ms, self.settings.step_hz);
         self.settings.scanning = true;
         self.settings.save();
         self.radio.send(Command::SetRange {
@@ -627,11 +637,28 @@ impl ShackHackApp {
             Stroke::new(1.5_f32, PHOSPHOR),
             egui::StrokeKind::Inside,
         );
+        // The LO window is a sliver on a 52–1700 MHz bar. This mark is the
+        // sweep itself, so bounce is visible from the low end to the high end.
+        let sweep_hz = snap
+            .vfos
+            .first()
+            .map(|v| v.display_hz)
+            .unwrap_or(snap.lo_hz);
+        let pos = ((sweep_hz - snap.min_hz as f64) / span).clamp(0.0, 1.0);
+        let x = rect.left() + pos as f32 * w;
+        painter.vline(x, rect.y_range(), Stroke::new(3.0_f32, PHOSPHOR_HOT));
+        let dir = if !snap.sweeping {
+            ""
+        } else if snap.sweep_dir < 0 {
+            "  down"
+        } else {
+            "  up"
+        };
         painter.text(
             rect.left_top() + Vec2::new(10.0, 6.0),
             egui::Align2::LEFT_TOP,
             format!(
-                "{:.3} – {:.3} MHz",
+                "{:.3} – {:.3} MHz{dir}",
                 snap.min_hz as f64 / 1e6,
                 snap.max_hz as f64 / 1e6
             ),

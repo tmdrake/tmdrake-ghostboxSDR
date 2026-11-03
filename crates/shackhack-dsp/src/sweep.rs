@@ -69,6 +69,14 @@ impl Sweeper {
         self.direction
     }
 
+    /// Start at the bottom of the configured span, moving upward.
+    pub fn restart_up(&mut self) {
+        self.freq_hz = self.cfg.min_hz;
+        self.prev_freq_hz = self.freq_hz;
+        self.direction = 1;
+        self.samples_in_dwell = 0;
+    }
+
     /// Advance by `n` IQ samples. Returns true when the channel stepped.
     pub fn consume_samples(&mut self, n: u64) -> bool {
         self.samples_in_dwell += n;
@@ -101,17 +109,7 @@ impl Sweeper {
                     self.freq_hz - step
                 }
             }
-            Mode::Bounce => {
-                let mut f = self.freq_hz as i64 + self.direction as i64 * step as i64;
-                if f as u64 >= max {
-                    f = max as i64;
-                    self.direction = -1;
-                } else if (f as u64) <= min {
-                    f = min as i64;
-                    self.direction = 1;
-                }
-                f as u64
-            }
+            Mode::Bounce => bounce_step(self.freq_hz, step, min, max, &mut self.direction),
             Mode::Random => {
                 self.rng = self.rng.wrapping_mul(6364136223846793005).wrapping_add(1);
                 let span = max.saturating_sub(min).max(1);
@@ -136,6 +134,48 @@ impl Sweeper {
     }
 }
 
+/// One bounce step. Lands on `min` and `max`, then leaves on the next step.
+/// Stays in `i64` so an overshoot cannot wrap through `u64`.
+fn bounce_step(freq_hz: u64, step: u64, min: u64, max: u64, direction: &mut i8) -> u64 {
+    let step_i = step as i64;
+    let min_i = min as i64;
+    let max_i = max as i64;
+    let cur = freq_hz as i64;
+    let next = cur + *direction as i64 * step_i;
+    let f = if *direction >= 0 {
+        if next < max_i {
+            next
+        } else if cur < max_i {
+            max_i
+        } else {
+            *direction = -1;
+            (max_i - step_i).max(min_i)
+        }
+    } else if next > min_i {
+        next
+    } else if cur > min_i {
+        min_i
+    } else {
+        *direction = 1;
+        (min_i + step_i).min(max_i)
+    };
+    f as u64
+}
+
+/// Step for a full-range pass. One direction takes about 90 seconds.
+/// A step that already finishes in under three minutes is left alone.
+/// Hops stay at most 2 MHz, one RTL window, so the slices still overlap.
+pub fn full_range_step(span_hz: u64, dwell_ms: u32, current: u64) -> u64 {
+    let dwell = u64::from(dwell_ms.clamp(10, 500));
+    let pass_ms = span_hz.saturating_div(current.max(1)).saturating_mul(dwell);
+    if current >= 100_000 && pass_ms <= 180_000 {
+        return current;
+    }
+    let steps = (90_000u64 / dwell).max(1);
+    let raw = (span_hz / steps).clamp(250_000, 2_000_000);
+    (raw / 50_000).max(1) * 50_000
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -155,7 +195,51 @@ mod tests {
         s.samples_in_dwell = s.dwell_samples;
         s.consume_samples(0);
         assert_eq!(s.direction, -1);
-        assert!(s.freq_hz <= 130);
+        assert!(s.freq_hz < 130);
+    }
+
+    #[test]
+    fn bounce_reaches_both_ends_of_a_wide_span() {
+        let cfg = SweepConfig {
+            min_hz: 52_000_000,
+            max_hz: 1_700_000_000,
+            step_hz: 250_000,
+            dwell_ms: 1,
+            mode: Mode::Bounce,
+        };
+        let mut s = Sweeper::new(cfg, 2_400_000.0);
+        s.restart_up();
+        let mut saw_max = false;
+        let mut saw_min = false;
+        for _ in 0..20_000 {
+            s.samples_in_dwell = s.dwell_samples;
+            s.consume_samples(0);
+            if s.freq_hz == 1_700_000_000 {
+                saw_max = true;
+                assert_eq!(s.direction(), 1);
+            }
+            if saw_max && s.freq_hz == 52_000_000 {
+                saw_min = true;
+                assert_eq!(s.direction(), -1);
+                break;
+            }
+        }
+        assert!(saw_max, "never landed on the top");
+        assert!(saw_min, "never bounced back to the bottom");
+        s.samples_in_dwell = s.dwell_samples;
+        s.consume_samples(0);
+        assert_eq!(s.direction(), 1);
+        assert!(s.freq_hz > 52_000_000);
+    }
+
+    #[test]
+    fn full_range_step_finishes_a_pass_near_ninety_seconds() {
+        let span = 1_700_000_000 - 52_000_000;
+        let step = full_range_step(span, 90, 150_000);
+        let pass_ms = span / step * 90;
+        assert!((250_000..=2_000_000).contains(&step), "{step}");
+        assert!((60_000..=120_000).contains(&pass_ms), "{pass_ms} ms");
+        assert_eq!(full_range_step(span, 90, 2_000_000), 2_000_000);
     }
 
     #[test]

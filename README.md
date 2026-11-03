@@ -166,7 +166,7 @@ cargo run --release -p shackhack -- --synth
 The scan starts on open. **Stop scan** means it is already moving. **Start scan** means it is held.
 
 - **Listen** — type a frequency (the box opens on **95.5**) and park **V1** there. The scan stops, mute turns off, and a broadcast-FM frequency forces wide FM. The LO hops so that frequency is in the window.
-- **Full range** — sweep from the lowest frequency this stick can tune to the highest. This E4000 is about **52–1700 MHz**. A generic R820T is about **24–1766 MHz**. A Blog V4 starts at **500 kHz**. The LO hops on every step. Dwell and demod are left as you set them. If the step is still under 100 kHz, Full range raises it to 250 kHz so a pass is minutes, not an hour.
+- **Full range** — sweep from the lowest frequency this stick can tune to the highest. This E4000 is about **52–1700 MHz**. A generic R820T is about **24–1766 MHz**. A Blog V4 starts at **500 kHz**. The LO hops on every step. Bounce starts at the bottom and turns around at both ends. The white mark on the range bar is the sweep. Dwell and demod stay as you set them. The step is raised so one direction takes about a minute and a half (hops stay within 2 MHz), unless the step you already set finishes a pass in under three minutes.
 - **Band** — FM, airband, marine, NOAA, GMRS, 70 cm, …
 - **Mode** — bounce, forward, backward, random. Random jumps the LO around. Forward or bounce is the readable sweep.
 - **Dwell** — 10–500 ms on each step. **Step** — channel spacing in kHz.

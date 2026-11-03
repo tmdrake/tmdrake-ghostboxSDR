@@ -86,6 +86,8 @@ pub struct Snapshot {
     pub step_hz: u64,
     pub dwell_ms: u32,
     pub mode: Mode,
+    /// +1 up, -1 down. Bounce flips this at the ends of the span.
+    pub sweep_dir: i8,
     pub demod: DemodKind,
     pub error: Option<String>,
     pub audio_rms: f32,
@@ -124,6 +126,7 @@ impl Snapshot {
             step_hz: 150_000,
             dwell_ms: 30,
             mode: Mode::Bounce,
+            sweep_dir: 1,
             demod: DemodKind::Wfm,
             error: err,
             audio_rms: 0.0,
@@ -260,14 +263,9 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                             Command::SetRange { min_hz, max_hz } => {
                                 sweeper.cfg.min_hz = min_hz;
                                 sweeper.cfg.max_hz = max_hz.max(min_hz + sweeper.cfg.step_hz);
-                                if sweeper.freq_hz < sweeper.cfg.min_hz
-                                    || sweeper.freq_hz > sweeper.cfg.max_hz
-                                {
-                                    sweeper.freq_hz = sweeper.cfg.min_hz;
-                                    sweeper.prev_freq_hz = sweeper.freq_hz;
-                                }
+                                sweeper.restart_up();
                                 vfos[0].freq_hz = sweeper.freq_hz as f64;
-                                lo = sweeper.needed_lo(sr, tuner_min, tuner_max);
+                                lo = clamp_lo(sweeper.freq_hz as f64, tuner_min, tuner_max, sr);
                                 hop_now(&mut source, lo, &mut hop_fade, &mut fade);
                                 sweeper.set_sample_rate(sr);
                             }
@@ -357,10 +355,18 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                     let stepped = sweeper.consume_samples(n);
                     if stepped {
                         vfos[0].freq_hz = sweeper.freq_hz as f64;
+                        // A normal step glides. A jump of many steps (a bad
+                        // turnaround) snaps, so the big digits match the LO.
+                        let jump = sweeper.freq_hz.abs_diff(sweeper.prev_freq_hz);
+                        let step = sweeper.cfg.step_hz.max(1);
+                        if jump > step.saturating_mul(4).max(5_000_000) {
+                            sweeper.prev_freq_hz = sweeper.freq_hz;
+                        }
                         let span = sweeper.cfg.max_hz.saturating_sub(sweeper.cfg.min_hz);
                         // A narrow band keeps the LO parked so the walk stays smooth.
-                        // A wide span hops the LO onto each step, or the readout
-                        // sits still for the whole 2.4 MHz window.
+                        // A wide span, including Full range, hops the LO onto each
+                        // step. clamp_lo keeps that center inside the tuner, and
+                        // the sweep frequency itself still lands on both ends.
                         if span > 30_000_000 {
                             lo = clamp_lo(sweeper.freq_hz as f64, tuner_min, tuner_max, sr);
                             hop_now(&mut source, lo, &mut hop_fade, &mut fade);
@@ -427,6 +433,7 @@ pub fn start(kind: SourceKind) -> RadioHandle {
                     s.step_hz = sweeper.cfg.step_hz;
                     s.dwell_ms = sweeper.cfg.dwell_ms;
                     s.mode = sweeper.cfg.mode;
+                    s.sweep_dir = sweeper.direction();
                     s.demod = demod;
                     s.audio_rms = rms;
                     s.hop = hop_flag;

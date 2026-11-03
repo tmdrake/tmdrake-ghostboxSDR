@@ -16,7 +16,7 @@ Generic R820T sticks start around **24 MHz**. That is the floor without an upcon
 | GMRS / FRS | 462–467 | NFM | Handhelds |
 | AM Broadcast | 0.53–1.70 | AM | **Needs HF** (V4 or direct sampling) |
 
-**Full range** is not a fixed preset. It uses the stick's own limits (E4000 about 52–1700 MHz, R820T about 24–1766 MHz, Blog V4 from 500 kHz) and hops the local oscillator on every step.
+**Full range** is not a fixed preset. It uses the stick's own limits (E4000 about 52–1700 MHz, R820T about 24–1766 MHz, Blog V4 from 500 kHz) and hops the local oscillator on every step. Bounce starts at the low end, lands on the high end, and comes back. The step is sized so that one direction takes about a minute and a half.
 
 Skip in v1: 700/800 MHz public safety (mostly P25, often encrypted).
 
